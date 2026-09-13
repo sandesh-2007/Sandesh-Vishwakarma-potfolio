@@ -75,6 +75,13 @@ export const googleSignIn = async (): Promise<{ user: User; accessToken: string 
     return { user: result.user, accessToken: cachedAccessToken };
   } catch (error: any) {
     console.error('Google Sign-in error:', error);
+    if (error?.code === 'auth/unauthorized-domain' || error?.message?.includes('unauthorized-domain')) {
+      const currentHost = typeof window !== 'undefined' ? window.location.hostname : 'your domain';
+      const customErr: any = new Error(`Domain not authorized in Firebase Auth: Please add "${currentHost}" to Firebase Authorized Domains.`);
+      customErr.code = 'auth/unauthorized-domain';
+      customErr.domain = currentHost;
+      throw customErr;
+    }
     throw error;
   } finally {
     isSigningIn = false;

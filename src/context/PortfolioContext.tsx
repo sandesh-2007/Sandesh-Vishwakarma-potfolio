@@ -57,10 +57,13 @@ interface PortfolioContextType {
   googleUser: User | null;
   hasGoogleAuth: boolean;
   isGoogleConnecting: boolean;
+  authDomainError: string | null;
+  clearAuthDomainError: () => void;
   connectGoogleAccount: () => Promise<boolean>;
   disconnectGoogleAccount: () => Promise<void>;
   createAndConnectGoogleSheet: () => Promise<boolean>;
   connectExistingGoogleSheet: (idOrUrl: string, sheetName?: string) => Promise<boolean>;
+  connectWebhookGoogleSheet: (webhookUrl: string, sheetUrl?: string) => Promise<boolean>;
   disconnectGoogleSheet: () => Promise<boolean>;
   syncAllMessagesToSheet: () => Promise<number>;
   theme: 'dark' | 'light';
@@ -121,6 +124,11 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({ children 
   const [googleUser, setGoogleUser] = useState<User | null>(null);
   const [hasGoogleAuth, setHasGoogleAuth] = useState(false);
   const [isGoogleConnecting, setIsGoogleConnecting] = useState(false);
+  const [authDomainError, setAuthDomainError] = useState<string | null>(null);
+
+  const clearAuthDomainError = () => {
+    setAuthDomainError(null);
+  };
 
   // Initialize Firebase Auth listener for Google Workspace token
   useEffect(() => {
@@ -725,6 +733,7 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({ children 
     }
     try {
       setIsGoogleConnecting(true);
+      setAuthDomainError(null);
       const res = await googleSignIn();
       if (res?.accessToken) {
         setGoogleUser(res.user);
@@ -735,7 +744,13 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({ children 
       return false;
     } catch (err: any) {
       console.error('Google account connect error:', err);
-      showToast(err.message || 'Failed to sign in with Google', 'error');
+      if (err?.code === 'auth/unauthorized-domain' || err?.message?.includes('unauthorized-domain') || err?.message?.includes('Domain not authorized')) {
+        const domain = typeof window !== 'undefined' ? window.location.hostname : 'sandesh-vishwakarma-potfolio.vercel.app';
+        setAuthDomainError(domain);
+        showToast(`Domain not authorized: Please authorize "${domain}" in Firebase Console`, 'error');
+      } else {
+        showToast(err.message || 'Failed to sign in with Google', 'error');
+      }
       return false;
     } finally {
       setIsGoogleConnecting(false);
@@ -765,6 +780,7 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({ children 
     }
     try {
       setIsGoogleConnecting(true);
+      setAuthDomainError(null);
       let token = await getAccessToken();
       if (!token) {
         showToast('Connecting Google account for Sheets access...', 'info');
@@ -808,7 +824,13 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({ children 
       return true;
     } catch (err: any) {
       console.error('Create sheet error:', err);
-      showToast(err.message || 'Failed to create Google Sheet', 'error');
+      if (err?.code === 'auth/unauthorized-domain' || err?.message?.includes('unauthorized-domain') || err?.message?.includes('Domain not authorized')) {
+        const domain = typeof window !== 'undefined' ? window.location.hostname : 'sandesh-vishwakarma-potfolio.vercel.app';
+        setAuthDomainError(domain);
+        showToast(`Domain not authorized: Please authorize "${domain}" in Firebase Console`, 'error');
+      } else {
+        showToast(err.message || 'Failed to create Google Sheet', 'error');
+      }
       return false;
     } finally {
       setIsGoogleConnecting(false);
@@ -823,6 +845,7 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({ children 
     }
     try {
       setIsGoogleConnecting(true);
+      setAuthDomainError(null);
       const cleanId = extractSpreadsheetId(idOrUrl);
       if (!cleanId) {
         showToast('Please enter a valid Google Spreadsheet URL or ID', 'error');
@@ -863,11 +886,46 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({ children 
       return true;
     } catch (err: any) {
       console.error('Connect sheet error:', err);
-      showToast(err.message || 'Could not connect Google Sheet. Check permissions or ID.', 'error');
+      if (err?.code === 'auth/unauthorized-domain' || err?.message?.includes('unauthorized-domain') || err?.message?.includes('Domain not authorized')) {
+        const domain = typeof window !== 'undefined' ? window.location.hostname : 'sandesh-vishwakarma-potfolio.vercel.app';
+        setAuthDomainError(domain);
+        showToast(`Domain not authorized: Please authorize "${domain}" in Firebase Console`, 'error');
+      } else {
+        showToast(err.message || 'Could not connect Google Sheet. Check permissions or ID.', 'error');
+      }
       return false;
     } finally {
       setIsGoogleConnecting(false);
     }
+  };
+
+  const connectWebhookGoogleSheet = async (webhookUrl: string, sheetUrl?: string): Promise<boolean> => {
+    if (!isAdmin) {
+      showToast('Admin password required to configure Google Sheet', 'error');
+      setLoginModalOpen(true);
+      return false;
+    }
+    const cleanWebhook = webhookUrl.trim();
+    if (!cleanWebhook.startsWith('http')) {
+      showToast('Please provide a valid Webhook URL starting with https://', 'error');
+      return false;
+    }
+    const newConfig: GoogleSheetsConfig = {
+      spreadsheetId: 'webhook_integration',
+      spreadsheetUrl: sheetUrl?.trim() || cleanWebhook,
+      sheetName: 'Form Submissions',
+      spreadsheetTitle: 'Google Sheet Webhook Integration',
+      autoSync: true,
+      lastSyncedAt: new Date().toISOString(),
+      webhookUrl: cleanWebhook,
+    };
+    const updated = {
+      ...data,
+      sheetsConfig: newConfig,
+    };
+    await updatePortfolio(updated);
+    showToast('Google Sheet Webhook connected successfully! Responses will sync automatically.', 'success');
+    return true;
   };
 
   const disconnectGoogleSheet = async (): Promise<boolean> => {
@@ -979,6 +1037,27 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({ children 
       }
     }
 
+    // If Google Sheets Webhook is configured, send directly to Google Apps Script / Webhook
+    if (sheetsCfg?.webhookUrl) {
+      try {
+        await fetch(sheetsCfg.webhookUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: msg.name,
+            email: msg.email,
+            subject: msg.subject || 'Portfolio Inquiry',
+            message: msg.message,
+            timestamp: new Date().toISOString(),
+          }),
+        });
+        syncedToSheets = true;
+      } catch (webhookErr) {
+        console.warn('Google Sheets Webhook append failed:', webhookErr);
+      }
+    }
+
     try {
       const res = await fetch('/api/contact', {
         method: 'POST',
@@ -1079,10 +1158,13 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({ children 
         googleUser,
         hasGoogleAuth,
         isGoogleConnecting,
+        authDomainError,
+        clearAuthDomainError,
         connectGoogleAccount,
         disconnectGoogleAccount,
         createAndConnectGoogleSheet,
         connectExistingGoogleSheet,
+        connectWebhookGoogleSheet,
         disconnectGoogleSheet,
         syncAllMessagesToSheet,
         showToast,

@@ -120,6 +120,7 @@ export interface GoogleSheetsConfig {
   connectedEmail?: string;
   lastSyncedAt?: string;
   autoSync: boolean;
+  webhookUrl?: string;
 }
 
 export interface PortfolioData {
