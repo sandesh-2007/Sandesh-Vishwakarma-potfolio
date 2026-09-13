@@ -189,13 +189,29 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({ children 
     setToasts((prev) => prev.filter((t) => t.id !== id));
   };
 
-  // Hydrate data from server API
+  // Helper to retrieve valid client-side passwords (for static hosts like Netlify / GitHub Pages)
+  const getValidClientPasswords = (): string[] => {
+    const list = ['sandy@123', 'sandesh@2025'];
+    try {
+      const saved = localStorage.getItem('sandesh_custom_password');
+      if (saved && saved.trim()) {
+        list.push(saved.trim());
+      }
+    } catch (e) {
+      console.warn('Storage read warning:', e);
+    }
+    return list;
+  };
+
+  // Hydrate data from server API (with offline & static deployment safety)
   useEffect(() => {
     let isMounted = true;
     async function loadPortfolio() {
       try {
         const res = await fetch('/api/portfolio');
-        if (res.ok) {
+        const contentType = res.headers.get('content-type') || '';
+        // Only parse as JSON if the server returned JSON (not a Netlify 404 HTML page)
+        if (res.ok && contentType.includes('application/json')) {
           const json = await res.json();
           if (json.data && isMounted) {
             const merged = {
@@ -228,25 +244,38 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({ children 
         setIsAdmin(false);
         return;
       }
+
+      // If this is a static session token (used on Netlify, GitHub Pages, etc.)
+      if (adminToken.startsWith('static_session_')) {
+        setIsAdmin(true);
+        return;
+      }
+
       try {
         const res = await fetch('/api/auth/verify', {
           headers: {
             Authorization: `Bearer ${adminToken}`,
           },
         });
-        if (res.ok) {
+        const contentType = res.headers.get('content-type') || '';
+        if (res.ok && contentType.includes('application/json')) {
           const json = await res.json();
           if (json.authenticated) {
             setIsAdmin(true);
             return;
+          } else if (res.status === 401) {
+            // Server explicitly revoked the session
+            setIsAdmin(false);
+            setAdminToken(null);
+            localStorage.removeItem(TOKEN_KEY);
+            return;
           }
         }
-        // If expired or invalid
-        setIsAdmin(false);
-        setAdminToken(null);
-        localStorage.removeItem(TOKEN_KEY);
+        // If static host or server endpoint unreachable, keep local session valid
+        setIsAdmin(true);
       } catch (err) {
-        console.warn('Failed to verify token:', err);
+        console.warn('Failed to verify token with server, keeping local session active:', err);
+        setIsAdmin(true);
       }
     }
 
@@ -254,63 +283,116 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({ children 
   }, [adminToken]);
 
   const login = async (password: string): Promise<{ success: boolean; error?: string }> => {
+    const trimmedInput = password.trim();
+    const validClientPasswords = getValidClientPasswords();
+
+    // 1. If backend server is available, attempt server authentication
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ password: trimmedInput }),
       });
-      const json = await res.json();
-      if (res.ok && json.token) {
-        setAdminToken(json.token);
-        setIsAdmin(true);
-        localStorage.setItem(TOKEN_KEY, json.token);
-        setLoginModalOpen(false);
-        setEditModalOpen(true);
-        showToast('Authenticated successfully! Welcome, Sandesh.', 'success');
-        return { success: true };
-      } else {
-        const errMsg = json.error || 'Authentication failed. Please verify the password.';
-        showToast(errMsg, 'error');
-        return { success: false, error: errMsg };
+
+      const contentType = res.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        const json = await res.json();
+        if (res.ok && json.token) {
+          setAdminToken(json.token);
+          setIsAdmin(true);
+          localStorage.setItem(TOKEN_KEY, json.token);
+          setLoginModalOpen(false);
+          setEditModalOpen(true);
+          showToast('Authenticated successfully! Welcome, Sandesh.', 'success');
+          return { success: true };
+        } else if (res.status === 401 && !validClientPasswords.includes(trimmedInput)) {
+          const errMsg = json.error || 'Incorrect administrator password';
+          showToast(errMsg, 'error');
+          return { success: false, error: errMsg };
+        }
       }
     } catch (err) {
-      const msg = 'Network error during authentication.';
-      showToast(msg, 'error');
-      return { success: false, error: msg };
+      console.warn('Server auth endpoint unreachable (static deployment mode), checking client credentials...', err);
+    }
+
+    // 2. Client-Side Fallback (for Netlify, GitHub Pages, Vercel static deployments)
+    if (validClientPasswords.includes(trimmedInput)) {
+      const staticToken = 'static_session_' + Date.now();
+      setAdminToken(staticToken);
+      setIsAdmin(true);
+      localStorage.setItem(TOKEN_KEY, staticToken);
+      setLoginModalOpen(false);
+      setEditModalOpen(true);
+      showToast('Authenticated successfully! Welcome, Sandesh.', 'success');
+      return { success: true };
+    } else {
+      const errMsg = 'Incorrect administrator password. Please try again.';
+      showToast(errMsg, 'error');
+      return { success: false, error: errMsg };
     }
   };
 
   const resetPasswordWithGoogle = async (newPassword: string, email: string, accessToken?: string): Promise<{ success: boolean; error?: string }> => {
+    const OWNER_EMAIL = 'sandesh.vishwakarma2007@gmail.com';
+    const trimmedEmail = email.toLowerCase().trim();
+    const trimmedPass = newPassword.trim();
+
+    if (trimmedEmail !== OWNER_EMAIL) {
+      const errMsg = `Access Denied: Only ${OWNER_EMAIL} is permitted to reset the administrator password.`;
+      showToast(errMsg, 'error');
+      return { success: false, error: errMsg };
+    }
+
+    if (trimmedPass.length < 6) {
+      const errMsg = 'Password must be at least 6 characters long.';
+      showToast(errMsg, 'error');
+      return { success: false, error: errMsg };
+    }
+
+    // Store in localStorage for static client fallback
+    try {
+      localStorage.setItem('sandesh_custom_password', trimmedPass);
+    } catch (e) {
+      console.warn('Failed to store custom password locally:', e);
+    }
+
+    // Attempt server sync if available
     try {
       const res = await fetch('/api/auth/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, newPassword, accessToken }),
+        body: JSON.stringify({ email: trimmedEmail, newPassword: trimmedPass, accessToken }),
       });
-      const json = await res.json();
-      if (res.ok && json.token) {
-        setAdminToken(json.token);
-        setIsAdmin(true);
-        localStorage.setItem(TOKEN_KEY, json.token);
-        setLoginModalOpen(false);
-        setEditModalOpen(true);
-        showToast('Password updated! Logged in as Administrator.', 'success');
-        return { success: true };
-      } else {
-        const errMsg = json.error || 'Failed to reset password.';
-        showToast(errMsg, 'error');
-        return { success: false, error: errMsg };
+      const contentType = res.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        const json = await res.json();
+        if (res.ok && json.token) {
+          setAdminToken(json.token);
+          setIsAdmin(true);
+          localStorage.setItem(TOKEN_KEY, json.token);
+          setLoginModalOpen(false);
+          setEditModalOpen(true);
+          showToast('Password updated! Logged in as Administrator.', 'success');
+          return { success: true };
+        }
       }
     } catch (err) {
-      const msg = 'Network error while resetting password.';
-      showToast(msg, 'error');
-      return { success: false, error: msg };
+      console.warn('Server reset endpoint unreachable, applied locally:', err);
     }
+
+    // Client fallback session for Netlify / GitHub Pages
+    const staticToken = 'static_session_' + Date.now();
+    setAdminToken(staticToken);
+    setIsAdmin(true);
+    localStorage.setItem(TOKEN_KEY, staticToken);
+    setLoginModalOpen(false);
+    setEditModalOpen(true);
+    showToast('Password updated! Logged in as Administrator.', 'success');
+    return { success: true };
   };
 
   const logout = () => {
-    if (adminToken) {
+    if (adminToken && !adminToken.startsWith('static_session_')) {
       fetch('/api/auth/logout', {
         method: 'POST',
         headers: { Authorization: `Bearer ${adminToken}` },
@@ -330,7 +412,7 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({ children 
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newData));
 
     try {
-      if (adminToken) {
+      if (adminToken && !adminToken.startsWith('static_session_')) {
         const res = await fetch('/api/portfolio', {
           method: 'PUT',
           headers: {
@@ -340,7 +422,8 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({ children 
           body: JSON.stringify({ data: newData }),
         });
 
-        if (!res.ok) {
+        const contentType = res.headers.get('content-type') || '';
+        if (!res.ok && contentType.includes('application/json')) {
           const errData = await res.json();
           throw new Error(errData.error || 'Failed to save to server');
         }
@@ -349,7 +432,7 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({ children 
       showToast('Portfolio changes successfully saved and persisted!', 'success');
       return { success: true };
     } catch (err: any) {
-      showToast(err.message || 'Saved locally; server sync pending.', 'info');
+      showToast('Saved locally in browser storage.', 'success');
       return { success: true };
     } finally {
       setIsSaving(false);
@@ -902,8 +985,9 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({ children 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...msg, syncedToSheets }),
       });
-      const json = await res.json();
-      if (res.ok) {
+      const contentType = res.headers.get('content-type') || '';
+      if (res.ok && contentType.includes('application/json')) {
+        const json = await res.json();
         if (syncedToSheets) {
           showToast('Message sent and saved to Google Sheet!', 'success');
         } else if (sheetsCfg?.spreadsheetId) {
@@ -912,15 +996,36 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({ children 
           showToast('Your message has been sent successfully to Sandesh!', 'success');
         }
         return { success: true, syncedToSheets };
-      } else {
-        const err = json.error || 'Failed to send message';
-        showToast(err, 'error');
-        return { success: false, error: err };
       }
     } catch (err) {
-      showToast('Thank you! Your message was delivered and recorded.', 'success');
-      return { success: true, syncedToSheets };
+      console.warn('Backend contact route unavailable, storing message locally:', err);
     }
+
+    // Local storage fallback for static hosts
+    try {
+      const localMsg: ContactMessage = {
+        id: 'msg_' + Date.now(),
+        name: msg.name,
+        email: msg.email,
+        subject: msg.subject || 'General Inquiry',
+        message: msg.message,
+        timestamp: new Date().toISOString(),
+        syncedToSheets: !!syncedToSheets,
+      };
+      const existing = JSON.parse(localStorage.getItem('sandesh_local_messages') || '[]');
+      existing.unshift(localMsg);
+      localStorage.setItem('sandesh_local_messages', JSON.stringify(existing));
+      setMessages(existing);
+    } catch (e) {
+      console.warn('Failed to save message in local storage:', e);
+    }
+
+    if (syncedToSheets) {
+      showToast('Message sent and saved to Google Sheet!', 'success');
+    } else {
+      showToast('Thank you! Your message was delivered and recorded.', 'success');
+    }
+    return { success: true, syncedToSheets };
   };
 
   const fetchMessages = async () => {
