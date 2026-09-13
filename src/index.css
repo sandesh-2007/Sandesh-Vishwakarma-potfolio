@@ -1,0 +1,581 @@
+@import "tailwindcss";
+
+/* Zero border radius for all rectangular elements across the portfolio */
+*, *::before, *::after {
+  border-radius: 0 !important;
+}
+
+/* Maintain circular shape only for pure ambient lighting blurs, orbital dashed rings, and tiny status pings */
+.rounded-full.blur-3xl,
+.rounded-full.blur-2xl,
+.rounded-full.blur-xl,
+.rounded-full.blur-lg,
+.tech-orbit-ring {
+  border-radius: 9999px !important;
+}
+
+span.rounded-full.animate-pulse,
+span.rounded-full.animate-ping,
+span.w-2.h-2.rounded-full,
+span.w-2\.5.h-2\.5.rounded-full {
+  border-radius: 9999px !important;
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  body {
+    background-color: #050505;
+    color: #f4f4f5;
+    overflow-x: hidden;
+  }
+
+  /* Custom orange & black scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #09090b;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #27272a;
+    border-radius: 9999px;
+    border: 2px solid #09090b;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #f97316;
+  }
+}
+
+/* Glassmorphism and specialized orange-black-white portfolio utilities */
+.glass-panel {
+  background: rgba(18, 18, 18, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-panel-hover {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-panel-hover:hover {
+  background: rgba(24, 24, 27, 0.95);
+  border-color: rgba(249, 115, 22, 0.5);
+  box-shadow: 0 10px 30px -10px rgba(249, 115, 22, 0.25), 0 0 20px -5px rgba(255, 107, 0, 0.2);
+  transform: translateY(-3px);
+}
+
+.glow-gradient-text {
+  background: linear-gradient(135deg, #ffffff 0%, #ff8800 50%, #f97316 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.glow-orange-text {
+  background: linear-gradient(135deg, #fb923c 0%, #ea580c 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.glow-orange {
+  box-shadow: 0 0 30px -5px rgba(249, 115, 22, 0.45);
+}
+
+.glow-white {
+  box-shadow: 0 0 25px -5px rgba(255, 255, 255, 0.2);
+}
+
+/* Ambient gradient background mesh with orange & black tones */
+.bg-tech-mesh {
+  background-image: 
+    radial-gradient(circle at 15% 15%, rgba(249, 115, 22, 0.09) 0%, transparent 45%),
+    radial-gradient(circle at 85% 25%, rgba(234, 88, 12, 0.08) 0%, transparent 45%),
+    radial-gradient(circle at 50% 65%, rgba(255, 255, 255, 0.04) 0%, transparent 50%),
+    radial-gradient(circle at 80% 85%, rgba(249, 115, 22, 0.07) 0%, transparent 45%);
+}
+
+.grid-bg-pattern {
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+}
+
+@keyframes float-slow {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(2deg);
+  }
+}
+
+@keyframes pulse-subtle {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.03);
+  }
+}
+
+.animate-float {
+  animation: float-slow 6s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: float-slow 7s ease-in-out 2s infinite;
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 4s ease-in-out infinite;
+}
+
+/* Light Mode Architecture */
+html.light {
+  color-scheme: light;
+}
+
+.light-mode {
+  background-color: #fafafa !important;
+  color: #09090b !important;
+}
+
+/* Header & Navbar Light Mode */
+.light-mode header#main-navbar.bg-black\/95,
+.light-mode header#main-navbar {
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.light-mode header#main-navbar.bg-black\/95 {
+  background-color: rgba(255, 255, 255, 0.96) !important;
+  border-bottom-color: #e4e4e7 !important;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.06) !important;
+}
+
+.light-mode nav.bg-zinc-950\/80 {
+  background-color: rgba(255, 255, 255, 0.92) !important;
+  border-color: #e4e4e7 !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* General Card Backgrounds & Borders in Light Mode */
+.light-mode .bg-black:not(.keep-dark):not([class*="bg-black/8"]):not([class*="bg-black/7"]),
+.light-mode .bg-zinc-950 {
+  background-color: #ffffff !important;
+  border-color: #e4e4e7 !important;
+}
+
+.light-mode .bg-zinc-900,
+.light-mode .bg-zinc-900\/90,
+.light-mode .bg-zinc-900\/80,
+.light-mode .bg-zinc-900\/60,
+.light-mode .bg-zinc-900\/50,
+.light-mode .bg-zinc-900\/40,
+.light-mode .bg-zinc-800 {
+  background-color: #f4f4f5 !important;
+  border-color: #e4e4e7 !important;
+  color: #18181b !important;
+}
+
+.light-mode .border-zinc-900,
+.light-mode .border-zinc-800,
+.light-mode .border-zinc-800\/80,
+.light-mode .border-zinc-800\/90,
+.light-mode .border-zinc-800\/50,
+.light-mode .border-zinc-700 {
+  border-color: #e4e4e7 !important;
+}
+
+/* Text Hierarchy in Light Mode - High Contrast, Accessible */
+.light-mode .text-white:not([class*="from-orange"]):not([class*="bg-orange"]):not([class*="from-amber"]):not([class*="bg-emerald-600"]):not(.keep-white) {
+  color: #09090b !important;
+}
+
+.light-mode .text-zinc-100,
+.light-mode .text-zinc-200 {
+  color: #18181b !important;
+}
+
+.light-mode .text-zinc-300,
+.light-mode .text-zinc-400 {
+  color: #52525b !important;
+}
+
+.light-mode .text-zinc-500,
+.light-mode .text-zinc-600 {
+  color: #71717a !important;
+}
+
+/* Colored Text in Light Mode - Deep rich tones that are clearly legible on light bg */
+.light-mode .text-orange-400,
+.light-mode .text-orange-300 {
+  color: #ea580c !important;
+}
+
+.light-mode .text-amber-400,
+.light-mode .text-amber-300 {
+  color: #b45309 !important;
+}
+
+.light-mode .text-emerald-400,
+.light-mode .text-emerald-300 {
+  color: #047857 !important;
+}
+
+.light-mode .text-sky-400,
+.light-mode .text-sky-300 {
+  color: #0284c7 !important;
+}
+
+.light-mode .text-pink-400,
+.light-mode .text-pink-300 {
+  color: #db2777 !important;
+}
+
+/* Light Mode Badges & Highlight Tags */
+.light-mode [class*="bg-orange-950"] {
+  background-color: #fff7ed !important;
+  border-color: #fed7aa !important;
+  color: #c2410c !important;
+}
+.light-mode [class*="bg-orange-950"] * {
+  color: #c2410c !important;
+}
+
+.light-mode [class*="bg-emerald-950"] {
+  background-color: #ecfdf5 !important;
+  border-color: #a7f3d0 !important;
+  color: #047857 !important;
+}
+.light-mode [class*="bg-emerald-950"] * {
+  color: #047857 !important;
+}
+
+.light-mode [class*="bg-sky-950"] {
+  background-color: #f0f9ff !important;
+  border-color: #bae6fd !important;
+  color: #0369a1 !important;
+}
+.light-mode [class*="bg-sky-950"] * {
+  color: #0369a1 !important;
+}
+
+.light-mode [class*="bg-pink-950"] {
+  background-color: #fdf2f8 !important;
+  border-color: #fbcfe8 !important;
+  color: #be185d !important;
+}
+.light-mode [class*="bg-pink-950"] * {
+  color: #be185d !important;
+}
+
+.light-mode [class*="bg-amber-950"] {
+  background-color: #fffbeb !important;
+  border-color: #fde68a !important;
+  color: #b45309 !important;
+}
+.light-mode [class*="bg-amber-950"] * {
+  color: #b45309 !important;
+}
+
+.light-mode [class*="bg-blue-950"] {
+  background-color: #eff6ff !important;
+  border-color: #bfdbfe !important;
+  color: #1d4ed8 !important;
+}
+.light-mode [class*="bg-blue-950"] * {
+  color: #1d4ed8 !important;
+}
+
+.light-mode [class*="bg-red-950"] {
+  background-color: #fef2f2 !important;
+  border-color: #fecaca !important;
+  color: #b91c1c !important;
+}
+.light-mode [class*="bg-red-950"] * {
+  color: #b91c1c !important;
+}
+
+/* Button & Interactive Element Text - Scoped specifically to buttons/links, NOT container cards */
+.light-mode button[class*="from-orange"],
+.light-mode button[class*="from-orange"] *,
+.light-mode a[class*="from-orange"],
+.light-mode a[class*="from-orange"] *,
+.light-mode button[class*="from-orange-600"],
+.light-mode button[class*="from-orange-600"] *,
+.light-mode button[class*="from-orange-500"],
+.light-mode button[class*="from-orange-500"] *,
+.light-mode button.bg-orange-600,
+.light-mode button.bg-orange-600 *,
+.light-mode button.bg-orange-500,
+.light-mode button.bg-orange-500 *,
+.light-mode a.bg-orange-600,
+.light-mode a.bg-orange-600 *,
+.light-mode a.bg-orange-500,
+.light-mode a.bg-orange-500 * {
+  color: #ffffff !important;
+}
+
+/* About Me Profile Box Specific Light Mode Styling */
+.light-mode #about-profile-card {
+  background-color: #ffffff !important;
+  color: #09090b !important;
+  border-color: #e4e4e7 !important;
+}
+
+.light-mode #about-profile-card h3 {
+  color: #09090b !important;
+}
+
+.light-mode #about-profile-card .profile-headline {
+  color: #ea580c !important;
+}
+
+.light-mode #about-profile-card .profile-college {
+  color: #52525b !important;
+}
+
+.light-mode #about-profile-card .highlight-row {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+.light-mode #about-profile-card .highlight-label {
+  color: #475569 !important;
+}
+
+.light-mode #about-profile-card .highlight-value-primary {
+  color: #0f172a !important;
+}
+
+.light-mode #about-profile-card .highlight-value-orange {
+  color: #ea580c !important;
+}
+
+.light-mode #about-profile-card .highlight-value-emerald {
+  color: #047857 !important;
+}
+
+.light-mode #about-profile-card .quote-box {
+  background-color: #fff7ed !important;
+  border-color: #fed7aa !important;
+  color: #7c2d12 !important;
+}
+
+/* Tech Terminal Card in Light Mode */
+.light-mode #tech-terminal-card {
+  background-color: rgba(255, 255, 255, 0.96) !important;
+  border-color: #e4e4e7 !important;
+  color: #09090b !important;
+  box-shadow: 0 20px 40px -15px rgba(249, 115, 22, 0.12) !important;
+}
+
+/* Floating Navigation Buttons in Light Mode */
+.light-mode #floating-move-to-footer-btn,
+.light-mode #floating-back-to-top-btn {
+  background-color: rgba(255, 255, 255, 0.96) !important;
+  border-color: #e4e4e7 !important;
+  color: #18181b !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08) !important;
+}
+
+.light-mode #floating-move-to-footer-btn:hover {
+  background-color: #ea580c !important;
+  border-color: #ea580c !important;
+  color: #ffffff !important;
+}
+
+.light-mode #floating-back-to-top-btn:hover {
+  border-color: #fdba74 !important;
+  color: #ea580c !important;
+}
+
+/* Form Inputs, Textarea, and Select in Light Mode */
+.light-mode input:not([type="checkbox"]):not([type="radio"]),
+.light-mode textarea,
+.light-mode select {
+  background-color: #ffffff !important;
+  color: #09090b !important;
+  border-color: #d4d4d8 !important;
+}
+
+.light-mode input::placeholder,
+.light-mode textarea::placeholder {
+  color: #71717a !important;
+}
+
+/* Modal Backdrops & Overlays - Preserve Dark Translucent Atmosphere */
+.light-mode .fixed.inset-0.bg-black\/85,
+.light-mode .fixed.inset-0.bg-black\/80,
+.light-mode .fixed.inset-0.bg-black\/70,
+.light-mode [class*="bg-black\/85"],
+.light-mode [class*="bg-black\/80"],
+.light-mode [class*="bg-black\/70"],
+.light-mode [class*="bg-black\/60"],
+.light-mode [class*="bg-black\/50"] {
+  background-color: rgba(0, 0, 0, 0.75) !important;
+}
+
+.light-mode .glow-gradient-text {
+  background: linear-gradient(135deg, #09090b 0%, #ea580c 60%, #c2410c 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+.light-mode .glass-panel {
+  background: rgba(255, 255, 255, 0.94) !important;
+  border: 1px solid rgba(228, 228, 231, 0.9) !important;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05) !important;
+}
+
+.light-mode .glass-panel-hover:hover {
+  background: #ffffff !important;
+  border-color: rgba(249, 115, 22, 0.6) !important;
+  box-shadow: 0 10px 30px -10px rgba(249, 115, 22, 0.25) !important;
+}
+
+.light-mode .bg-tech-mesh {
+  background-image: 
+    radial-gradient(circle at 15% 15%, rgba(249, 115, 22, 0.08) 0%, transparent 45%),
+    radial-gradient(circle at 85% 25%, rgba(234, 88, 12, 0.06) 0%, transparent 45%),
+    radial-gradient(circle at 50% 65%, rgba(0, 0, 0, 0.02) 0%, transparent 50%),
+    radial-gradient(circle at 80% 85%, rgba(249, 115, 22, 0.07) 0%, transparent 45%) !important;
+}
+
+.light-mode .grid-bg-pattern {
+  background-image: 
+    linear-gradient(to right, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 1px, transparent 1px) !important;
+}
+
+.light-mode ::-webkit-scrollbar-track {
+  background: #f4f4f5 !important;
+}
+
+.light-mode ::-webkit-scrollbar-thumb {
+  background: #d4d4d8 !important;
+  border: 2px solid #f4f4f5 !important;
+}
+
+.light-mode ::-webkit-scrollbar-thumb:hover {
+  background: #f97316 !important;
+}
+
+/* ==========================================================================
+   RESUME PRINT STYLES - A4 High Contrast & Clean Paper Pagination
+   ========================================================================== */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm 15mm 15mm 15mm;
+  }
+
+  /* Reset all canvas backgrounds to pure white with solid black text */
+  html, body {
+    background-color: #ffffff !important;
+    color: #111827 !important;
+    overflow: visible !important;
+    height: auto !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 11pt !important;
+  }
+
+  /* Hide root background sections and navigation elements */
+  #navbar,
+  #hero,
+  #about,
+  #skills,
+  #other-skills,
+  #experience,
+  #projects,
+  #education,
+  #certifications,
+  #contact,
+  footer,
+  .tech-orbit-ring,
+  .bg-tech-mesh,
+  .blur-3xl,
+  .blur-2xl,
+  .no-print,
+  button,
+  .fixed.inset-0.bg-black\/85 {
+    display: none !important;
+  }
+
+  /* Reveal modal container cleanly */
+  #resume-modal-overlay {
+    position: static !important;
+    background: transparent !important;
+    padding: 0 !important;
+    inset: auto !important;
+    display: block !important;
+    overflow: visible !important;
+  }
+
+  #resume-modal-card {
+    position: static !important;
+    max-width: 100% !important;
+    max-height: none !important;
+    background: #ffffff !important;
+    color: #111827 !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
+  }
+
+  #resume-modal-header {
+    display: none !important;
+  }
+
+  #resume-printable-content {
+    display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #ffffff !important;
+    color: #111827 !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  #resume-printable-content * {
+    color: #111827 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border-color: #e5e7eb !important;
+  }
+
+  #resume-printable-content h1,
+  #resume-printable-content h2,
+  #resume-printable-content h3 {
+    color: #0f172a !important;
+  }
+
+  #resume-printable-content .text-orange-400,
+  #resume-printable-content .text-orange-500,
+  #resume-printable-content .text-amber-300 {
+    color: #c2410c !important;
+  }
+
+  .resume-section-item,
+  .project-card,
+  #resume-printable-content > div {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+}
+
+

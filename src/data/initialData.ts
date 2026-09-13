@@ -1,0 +1,283 @@
+import { PortfolioData } from '../types';
+
+export const initialPortfolioData: PortfolioData = {
+  profile: {
+    name: 'Sandesh Vishwakarma',
+    headline: 'B.Sc. IT Student',
+    tagline: 'Web Development • Design • Technology',
+    shortBio: "I'm a B.Sc. IT student passionate about technology, web development, design, and building useful digital solutions.",
+    aboutLong: [
+      "I am an enthusiastic and dedicated B.Sc. Information Technology student at Thakur Shyamnarayan Degree College, driven by an eager curiosity for software development, modern web architecture, and intuitive design.",
+      "My passion lies in solving real-world challenges through technology. Whether designing responsive client-facing interfaces, optimizing relational database schemas, or automating financial reporting workflows, I focus on delivering clean, maintainable, and high-impact digital solutions.",
+      "Always proactive in upskilling, I constantly explore emerging frameworks, modern UI/UX principles, and AI-driven developer productivity tools. I am actively seeking freelance opportunities and future industry roles where I can contribute meaningful value and collaborate with visionary teams."
+    ],
+    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80',
+    location: 'Mumbai, Maharashtra, India',
+    email: 'sandesh.vishwakarma2007@gmail.com',
+    phone: '+91 91370 00000',
+    status: 'Open for Freelance & Internships',
+    resumeUrl: '#resume',
+    resumeFileName: 'Sandesh_Vishwakarma_Resume.pdf',
+    socials: {
+      github: 'https://github.com/sandesh-2007',
+      linkedin: 'https://www.linkedin.com/in/sandesh-vishwakarma-04a25a346',
+      instagram: 'https://www.instagram.com/sandesh_vishwakarma_101',
+      email: 'mailto:sandesh.vishwakarma2007@gmail.com'
+    },
+    stats: {
+      projectsCount: '5+',
+      technologiesCount: '13+',
+      certificationsCount: '4+',
+      currentSemester: '2nd / 3rd Sem'
+    }
+  },
+  education: [
+    {
+      id: 'edu-1',
+      degree: 'B.Sc. Information Technology',
+      institution: 'Thakur Shyamnarayan Degree College',
+      startYear: '2024',
+      endYear: '2027 (Expected)',
+      status: 'Currently Pursuing • 2nd / 3rd Semester',
+      description: 'Focusing on Core Programming, Database Management Systems, Data Structures, Web Technologies, Computer Networks, and Software Engineering methodologies.',
+      certificateLink: '#'
+    },
+    {
+      id: 'edu-2',
+      degree: 'Higher Secondary Certificate (HSC) — Science & IT',
+      institution: 'Maharashtra State Board',
+      startYear: '2022',
+      endYear: '2024',
+      status: 'Completed with Distinction',
+      description: 'Completed foundational coursework in Computer Science, Information Technology, Mathematics, and Physics with strong analytical performance.',
+      certificateLink: '#'
+    },
+    {
+      id: 'edu-3',
+      degree: 'Secondary School Certificate (SSC)',
+      institution: 'Maharashtra State Board',
+      startYear: '2021',
+      endYear: '2022',
+      status: 'Completed',
+      description: 'Strong foundation in Science, Mathematics, and introductory computational thinking.',
+      certificateLink: '#'
+    }
+  ],
+  otherSkills: [
+    {
+      id: 'os-1',
+      title: 'Mobile Banking & Fintech UI/UX Prototype',
+      category: 'Figma & UI/UX',
+      description: 'Interactive high-fidelity Figma user interface for personal finance tracking, featuring dark mode analytics, card management, and seamless transaction flows.',
+      imageUrl: 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?auto=format&fit=crop&w=1000&q=80',
+      externalUrl: 'https://www.figma.com',
+      date: '2025',
+      toolsUsed: ['Figma', 'UI/UX Design', 'Wireframing', 'Prototyping']
+    },
+    {
+      id: 'os-2',
+      title: 'College TechFest & Hackathon Official Poster',
+      category: 'Posters & Banners',
+      description: 'High-impact promotional poster and standee graphics designed for university campus technical symposium and coding hackathon.',
+      imageUrl: 'https://images.unsplash.com/photo-1626785774573-4b799315345d?auto=format&fit=crop&w=1000&q=80',
+      externalUrl: '#',
+      date: '2024',
+      toolsUsed: ['Photoshop', 'Canva Pro', 'Graphic Design', 'Print Layout']
+    },
+    {
+      id: 'os-3',
+      title: 'B.Sc. IT Seminar: Cloud Computing Presentation PPT',
+      category: 'PPTs & Presentations',
+      description: 'Comprehensive 25-slide professional presentation deck detailing cloud virtualization, Docker containers, and microservices architecture with custom vector diagrams.',
+      imageUrl: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=1000&q=80',
+      externalUrl: '#',
+      date: '2024',
+      toolsUsed: ['Microsoft PowerPoint', 'Canva', 'Infographics', 'Visual Storytelling']
+    },
+    {
+      id: 'os-4',
+      title: 'Brand Identity & Vector Logo Concepts',
+      category: 'Graphic Design',
+      description: 'Modern geometric brand logo guidelines, color palettes, and typographic stationery designed for digital creator startups.',
+      imageUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1000&q=80',
+      externalUrl: '#',
+      date: '2025',
+      toolsUsed: ['Adobe Illustrator', 'Logo Design', 'Vector Art', 'Branding']
+    },
+    {
+      id: 'os-5',
+      title: 'Developer Workshop Social Media Carousel Posts',
+      category: 'Social Media Posts',
+      description: 'Engaging multi-slide Instagram and LinkedIn carousel graphics on web development tips, Git cheatsheets, and student coding resources.',
+      imageUrl: 'https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&w=1000&q=80',
+      externalUrl: '#',
+      date: '2025',
+      toolsUsed: ['Canva', 'Social Media Graphics', 'Content Design', 'Typography']
+    }
+  ],
+  skills: [
+    { id: 'sk-1', name: 'HTML5', category: 'Frontend', proficiency: 95, icon: 'FileCode2', level: 'Advanced' },
+    { id: 'sk-2', name: 'CSS3 & Tailwind', category: 'Frontend', proficiency: 90, icon: 'Palette', level: 'Advanced' },
+    { id: 'sk-3', name: 'JavaScript (ES6+)', category: 'Frontend', proficiency: 88, icon: 'Sparkles', level: 'Proficient' },
+    { id: 'sk-4', name: 'React', category: 'Frontend', proficiency: 82, icon: 'Atom', level: 'Intermediate' },
+    { id: 'sk-5', name: 'TypeScript', category: 'Frontend', proficiency: 78, icon: 'Layers', level: 'Intermediate' },
+    { id: 'sk-6', name: 'C / C++', category: 'Programming', proficiency: 85, icon: 'Cpu', level: 'Proficient' },
+    { id: 'sk-7', name: 'Python', category: 'Programming', proficiency: 80, icon: 'Terminal', level: 'Intermediate' },
+    { id: 'sk-8', name: 'SQL & Relational DBs', category: 'Data & Tools', proficiency: 85, icon: 'Database', level: 'Proficient' },
+    { id: 'sk-9', name: 'Advanced Excel', category: 'Data & Tools', proficiency: 92, icon: 'Sheet', level: 'Advanced' },
+    { id: 'sk-10', name: 'Git & GitHub', category: 'Data & Tools', proficiency: 86, icon: 'GitBranch', level: 'Proficient' },
+    { id: 'sk-11', name: 'Figma', category: 'Design & AI', proficiency: 80, icon: 'Figma', level: 'Intermediate' },
+    { id: 'sk-12', name: 'Canva', category: 'Design & AI', proficiency: 92, icon: 'Image', level: 'Advanced' },
+    { id: 'sk-13', name: 'AI Developer Tools', category: 'Design & AI', proficiency: 88, icon: 'Bot', level: 'Proficient' }
+  ],
+  projects: [
+    {
+      id: 'proj-1',
+      name: "Heaven's Classes Management System",
+      category: 'Systems & Software',
+      description: 'A comprehensive academic coaching management portal designed to streamline student enrollments, fee payment schedules, batch timetables, and attendance logs with automated receipt generation.',
+      image: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=800&q=80',
+      technologies: ['React', 'Node.js', 'SQL Database', 'Tailwind CSS', 'Chart.js'],
+      githubLink: 'https://github.com',
+      liveDemoLink: '#',
+      featured: true
+    },
+    {
+      id: 'proj-2',
+      name: 'Personal Portfolio Website',
+      category: 'Web Development',
+      description: 'A cutting-edge, responsive personal brand website featuring futuristic dark aesthetics, glassmorphism cards, dynamic interactive showcases, and an authenticated administrative edit suite for real-time updates.',
+      image: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=800&q=80',
+      technologies: ['React', 'TypeScript', 'Tailwind CSS', 'Motion', 'Express API'],
+      githubLink: 'https://github.com',
+      liveDemoLink: '#',
+      featured: true
+    },
+    {
+      id: 'proj-3',
+      name: 'Library Management System',
+      category: 'Systems & Software',
+      description: 'A robust desktop and web-friendly cataloging application providing instant book ISBN lookup, student borrowing histories, fine calculators, and real-time inventory threshold tracking.',
+      image: 'https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=800&q=80',
+      technologies: ['Python', 'SQL', 'Tkinter / Web UI', 'Relational Database'],
+      githubLink: 'https://github.com',
+      liveDemoLink: '#',
+      featured: true
+    },
+    {
+      id: 'proj-4',
+      name: 'Excel Data Analysis & Financial Dashboard',
+      category: 'Data & Analysis',
+      description: 'Dynamic financial accounting and data analytics workbook built for co-operative societies, incorporating automated VLOOKUP/XLOOKUP formulas, pivot summary cards, and dynamic visual graphs.',
+      image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80',
+      technologies: ['Microsoft Excel', 'Financial Modeling', 'Pivot Charts', 'Data Reconciliation'],
+      githubLink: 'https://github.com',
+      liveDemoLink: '#',
+      featured: false
+    },
+    {
+      id: 'proj-5',
+      name: 'College Academic Portal & Coursework Utilities',
+      category: 'College Projects',
+      description: 'Suite of utilities built for B.Sc. IT coursework, including algorithm visualizers (sorting/searching in C++), interactive SQL sandbox utilities, and responsive student group project showcases.',
+      image: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=800&q=80',
+      technologies: ['C++', 'HTML5', 'CSS3', 'JavaScript', 'Database Queries'],
+      githubLink: 'https://github.com',
+      liveDemoLink: '#',
+      featured: false
+    }
+  ],
+  experience: [
+    {
+      id: 'exp-1',
+      role: 'Assistant Accountant',
+      organization: 'Gopal Co-operative Credit Society Ltd.',
+      type: 'Part-Time',
+      startDate: '2023',
+      endDate: 'Present',
+      description: 'Managing day-to-day accounts, balancing cooperative deposit ledgers, and maintaining digital fiscal records.',
+      responsibilities: [
+        'Accurately recorded daily loan repayments, credit transactions, and member savings entries in financial systems.',
+        'Executed end-of-day bank reconciliations and verified discrepancy registers in tally sheets and accounting software.',
+        'Prepared monthly financial summaries, balance statements, and ledger audits utilizing advanced Excel spreadsheets.',
+        'Collaborated with senior auditors and credit society management to ensure statutory compliance and transparent records.'
+      ]
+    }
+  ],
+  certifications: [
+    {
+      id: 'cert-1',
+      name: 'MS-CIT (Maharashtra State Certificate in IT)',
+      issuingOrg: 'Maharashtra Knowledge Corporation Limited (MKCL)',
+      year: '2023',
+      certificateLink: '#',
+      imageUrl: 'https://images.unsplash.com/photo-1606326608606-aa0b62935f2b?auto=format&fit=crop&w=600&q=80'
+    },
+    {
+      id: 'cert-2',
+      name: 'Tally with GST & Financial Accounting',
+      issuingOrg: 'Authorized Vocational Training Institute',
+      year: '2023',
+      certificateLink: '#',
+      imageUrl: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=600&q=80'
+    },
+    {
+      id: 'cert-3',
+      name: 'Web Development Fundamentals (HTML, CSS, JS)',
+      issuingOrg: 'Online Tech Academy & Coursework',
+      year: '2024',
+      certificateLink: '#',
+      imageUrl: 'https://images.unsplash.com/photo-1587620962725-abab7fe55159?auto=format&fit=crop&w=600&q=80'
+    },
+    {
+      id: 'cert-4',
+      name: 'Cybersecurity Basics & Digital Defense',
+      issuingOrg: 'Information Security Training Workshop',
+      year: '2024',
+      certificateLink: '#',
+      imageUrl: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=600&q=80'
+    },
+    {
+      id: 'cert-5',
+      name: 'Workshops & Technical Seminar Certifications',
+      issuingOrg: 'College Tech Committee & Youth Forums',
+      year: '2024',
+      certificateLink: '#',
+      imageUrl: 'https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=600&q=80'
+    }
+  ],
+  achievements: [
+    {
+      id: 'ach-1',
+      title: 'National Service Scheme (NSS) Active Contributor',
+      category: 'NSS Activities',
+      date: '2024 - 2025',
+      description: 'Actively contributed to community service projects, blood donation camps, digital literacy awareness drives, and environment conservation initiatives organized by the college NSS unit.',
+      highlightBadge: 'Social Leadership'
+    },
+    {
+      id: 'ach-2',
+      title: 'College Technical Symposium & Presentation',
+      category: 'College Competitions',
+      date: '2024',
+      description: 'Participated in inter-collegiate tech competitions, demonstrating software development workflows and computational problem-solving with high commendations.',
+      highlightBadge: 'Academic Excellence'
+    },
+    {
+      id: 'ach-3',
+      title: 'Practical Web Engineering & Full-Stack Projects',
+      category: 'Projects & Tech',
+      date: '2024 - 2025',
+      description: 'Successfully deployed working full-stack and accounting systems solving operational bottlenecks for educational institutions and financial societies.',
+      highlightBadge: 'Practical Innovation'
+    },
+    {
+      id: 'ach-4',
+      title: 'Professional Office & Financial Automation',
+      category: 'Courses & Certifications',
+      date: '2023 - 2024',
+      description: 'Mastered computerized ledger workflows, MS-CIT digital productivity suites, and Tally Prime GST compliance modules.',
+      highlightBadge: 'Applied Skills'
+    }
+  ]
+};
