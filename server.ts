@@ -87,6 +87,17 @@ function requireAuth(req: express.Request, res: express.Response, next: express.
   next();
 }
 
+// Direct ZIP file download endpoint with forced attachment header
+app.get('/api/download-zip', (req, res) => {
+  const zipPath = path.join(process.cwd(), 'public', 'portfolio-source-code.zip');
+  if (fs.existsSync(zipPath)) {
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', 'attachment; filename="sandesh-portfolio-source-code.zip"');
+    return res.sendFile(zipPath);
+  }
+  return res.status(404).json({ error: 'ZIP file not found' });
+});
+
 // API Health Check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

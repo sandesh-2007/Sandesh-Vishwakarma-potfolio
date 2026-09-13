@@ -11,7 +11,9 @@ import {
   Instagram,
   Mail,
   FileSpreadsheet,
-  Terminal
+  Terminal,
+  Download,
+  FolderArchive
 } from 'lucide-react';
 
 interface FooterProps {
@@ -171,6 +173,19 @@ export const Footer: React.FC<FooterProps> = ({ onOpenDiagnostics }) => {
                     <span>System Diagnostics Terminal</span>
                   </button>
                 )}
+
+                <a
+                  id="footer-download-zip-btn"
+                  href="/api/download-zip"
+                  download="sandesh-portfolio-source-code.zip"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-orange-600/90 to-amber-600/90 hover:from-orange-500 hover:to-amber-500 text-white font-medium shadow-sm transition-all w-fit text-xs active:scale-95 cursor-pointer"
+                  title="Download Complete Website Source Code as .ZIP"
+                >
+                  <FolderArchive className="w-3.5 h-3.5 text-white" />
+                  <span>Download Source (.ZIP)</span>
+                </a>
 
                 <button
                   id="footer-admin-btn"
