@@ -139,9 +139,15 @@ export const About: React.FC = () => {
                     title={isAdmin ? "Click to upload/change photo" : profile.name}
                   >
                     <img 
-                      src={profile.avatarUrl} 
+                      src={profile.avatarUrl || '/sandesh_profile.jpg'} 
                       alt={profile.name}
                       referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        if (target.src !== window.location.origin + '/sandesh_profile.jpg') {
+                          target.src = '/sandesh_profile.jpg';
+                        }
+                      }}
                       className={`w-full h-full object-cover ${
                         isAdmin ? 'group-hover/avatar:scale-110 transition-transform duration-500' : ''
                       }`}

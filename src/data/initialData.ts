@@ -11,7 +11,7 @@ export const initialPortfolioData: PortfolioData = {
       "My passion lies in solving real-world challenges through technology. Whether designing responsive client-facing interfaces, optimizing relational database schemas, or automating financial reporting workflows, I focus on delivering clean, maintainable, and high-impact digital solutions.",
       "Always proactive in upskilling, I constantly explore emerging frameworks, modern UI/UX principles, and AI-driven developer productivity tools. I am actively seeking freelance opportunities and future industry roles where I can contribute meaningful value and collaborate with visionary teams."
     ],
-    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80',
+    avatarUrl: '/sandesh_profile.jpg',
     location: 'Mumbai, Maharashtra, India',
     email: 'sandesh.vishwakarma2007@gmail.com',
     phone: '+91 91370 00000',

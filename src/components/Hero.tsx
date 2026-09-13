@@ -75,9 +75,15 @@ export const Hero: React.FC<HeroProps> = ({
                 >
                   <div className="w-5 h-5 rounded-full overflow-hidden border border-orange-500/60 shrink-0">
                     <img
-                      src={profile.avatarUrl}
+                      src={profile.avatarUrl || '/sandesh_profile.jpg'}
                       alt={profile.name}
                       referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        if (target.src !== window.location.origin + '/sandesh_profile.jpg') {
+                          target.src = '/sandesh_profile.jpg';
+                        }
+                      }}
                       className="w-full h-full object-cover"
                     />
                   </div>

@@ -53,6 +53,7 @@ function getValidPasswords(): string[] {
 
 // Serve uploaded files statically
 app.use('/api/uploads', express.static(UPLOADS_DIR));
+app.use('/uploads', express.static(UPLOADS_DIR));
 
 // In-memory active session tokens for security
 const activeSessions = new Map<string, { createdAt: number; expiresAt: number }>();
@@ -532,9 +533,21 @@ app.post('/api/upload', (req, res) => {
     const buffer = Buffer.from(matches[2], 'base64');
     const safeName = `${Date.now()}_${fileName.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
     const filePath = path.join(UPLOADS_DIR, safeName);
-
     fs.writeFileSync(filePath, buffer);
-    const fileUrl = `/api/uploads/${safeName}`;
+
+    // Also persist into public/uploads so static builds (Vercel, Netlify) immediately include it
+    const publicUploads = path.join(process.cwd(), 'public', 'uploads');
+    const publicApiUploads = path.join(process.cwd(), 'public', 'api', 'uploads');
+    try {
+      if (!fs.existsSync(publicUploads)) fs.mkdirSync(publicUploads, { recursive: true });
+      if (!fs.existsSync(publicApiUploads)) fs.mkdirSync(publicApiUploads, { recursive: true });
+      fs.writeFileSync(path.join(publicUploads, safeName), buffer);
+      fs.writeFileSync(path.join(publicApiUploads, safeName), buffer);
+    } catch (writeErr) {
+      console.warn('Could not write to public/uploads:', writeErr);
+    }
+
+    const fileUrl = `/uploads/${safeName}`;
 
     return res.json({
       success: true,

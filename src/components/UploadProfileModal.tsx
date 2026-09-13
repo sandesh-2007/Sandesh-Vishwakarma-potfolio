@@ -145,9 +145,15 @@ export const UploadProfileModal: React.FC<UploadProfileModalProps> = ({ isOpen, 
             <div className="relative group">
               <div className="w-28 h-28 rounded-full overflow-hidden border-2 border-orange-500/50 shadow-xl shadow-orange-950/50 bg-zinc-900">
                 <img
-                  src={previewUrl || data.profile.avatarUrl}
+                  src={previewUrl || data.profile.avatarUrl || '/sandesh_profile.jpg'}
                   alt="Profile Preview"
                   referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    if (target.src !== window.location.origin + '/sandesh_profile.jpg') {
+                      target.src = '/sandesh_profile.jpg';
+                    }
+                  }}
                   className="w-full h-full object-cover"
                 />
               </div>
