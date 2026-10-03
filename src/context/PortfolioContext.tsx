@@ -216,16 +216,47 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({ children 
     let isMounted = true;
     async function loadPortfolio() {
       try {
+        // Read local storage first
+        let localData: PortfolioData | null = null;
+        try {
+          const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+          if (saved) {
+            localData = JSON.parse(saved);
+          }
+        } catch (e) {
+          console.warn('Error reading local portfolio data:', e);
+        }
+
         const res = await fetch('/api/portfolio');
         const contentType = res.headers.get('content-type') || '';
-        // Only parse as JSON if the server returned JSON (not a Netlify 404 HTML page)
+        // Only parse as JSON if the server returned JSON (not a Netlify/Vercel 404 HTML page)
         if (res.ok && contentType.includes('application/json')) {
           const json = await res.json();
           if (json.data && isMounted) {
+            const serverData: PortfolioData = json.data;
+            const serverTime = serverData.updatedAt || 0;
+            const localTime = localData?.updatedAt || 0;
+
+            // If local data exists and has a newer timestamp than server data,
+            // keep the local data and sync it back to the server!
+            if (localData && localTime > serverTime) {
+              console.log('Local portfolio data is newer than server data. Keeping local edits and syncing to server...');
+              setData(localData);
+              fetch('/api/portfolio', {
+                method: 'PUT',
+                headers: {
+                  'Content-Type': 'application/json',
+                  ...(adminToken ? { Authorization: `Bearer ${adminToken}` } : {})
+                },
+                body: JSON.stringify({ data: localData }),
+              }).catch((syncErr) => console.warn('Background sync to server failed:', syncErr));
+              return;
+            }
+
             const merged = {
-              ...json.data,
-              otherSkills: json.data.otherSkills && json.data.otherSkills.length > 0
-                ? json.data.otherSkills
+              ...serverData,
+              otherSkills: serverData.otherSkills && serverData.otherSkills.length > 0
+                ? serverData.otherSkills
                 : (initialPortfolioData.otherSkills || [])
             };
             setData(merged);
@@ -243,7 +274,7 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({ children 
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [adminToken]);
 
   // Check auth session
   useEffect(() => {
@@ -415,36 +446,54 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({ children 
 
   const updatePortfolio = async (newData: PortfolioData): Promise<{ success: boolean; error?: string }> => {
     setIsSaving(true);
+
+    const dataWithTimestamp: PortfolioData = {
+      ...newData,
+      updatedAt: Date.now()
+    };
+
     // Instant optimistic update
-    setData(newData);
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newData));
-
+    setData(dataWithTimestamp);
     try {
-      if (adminToken && !adminToken.startsWith('static_session_')) {
-        const res = await fetch('/api/portfolio', {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${adminToken}`,
-          },
-          body: JSON.stringify({ data: newData }),
-        });
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dataWithTimestamp));
+    } catch (e) {
+      console.warn('Could not write to localStorage:', e);
+    }
 
-        const contentType = res.headers.get('content-type') || '';
-        if (!res.ok && contentType.includes('application/json')) {
-          const errData = await res.json();
-          throw new Error(errData.error || 'Failed to save to server');
-        }
+    let savedOnServer = false;
+    try {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (adminToken) {
+        headers['Authorization'] = `Bearer ${adminToken}`;
       }
 
-      showToast('Portfolio changes successfully saved and persisted!', 'success');
-      return { success: true };
+      const res = await fetch('/api/portfolio', {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify({ data: dataWithTimestamp }),
+      });
+
+      const contentType = res.headers.get('content-type') || '';
+      if (res.ok && contentType.includes('application/json')) {
+        const json = await res.json();
+        if (json.success) {
+          savedOnServer = true;
+        }
+      }
     } catch (err: any) {
-      showToast('Saved locally in browser storage.', 'success');
-      return { success: true };
-    } finally {
-      setIsSaving(false);
+      console.warn('Server PUT endpoint unreachable, saved locally:', err);
     }
+
+    if (savedOnServer) {
+      showToast('Portfolio changes successfully saved and synced!', 'success');
+    } else {
+      showToast('Portfolio changes saved in your browser storage!', 'success');
+    }
+
+    setIsSaving(false);
+    return { success: true };
   };
 
   const resetPortfolio = async (): Promise<{ success: boolean; error?: string }> => {

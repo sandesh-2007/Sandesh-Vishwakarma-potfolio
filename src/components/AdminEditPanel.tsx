@@ -49,13 +49,13 @@ export const AdminEditPanel: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'profile' | 'education' | 'skills' | 'projects' | 'experience' | 'certifications' | 'achievements' | 'resume' | 'messages'>('profile');
   const [isUploading, setIsUploading] = useState(false);
 
-  // Sync draft whenever modal opens or original data updates
+  // Sync draft whenever modal opens
   useEffect(() => {
     if (editModalOpen) {
       setDraft(JSON.parse(JSON.stringify(data)));
       fetchMessages();
     }
-  }, [editModalOpen, data]);
+  }, [editModalOpen]);
 
   if (!editModalOpen) return null;
 

@@ -124,6 +124,7 @@ export interface GoogleSheetsConfig {
 }
 
 export interface PortfolioData {
+  updatedAt?: number;
   profile: PersonalProfile;
   education: EducationItem[];
   otherSkills?: OtherSkillItem[];
