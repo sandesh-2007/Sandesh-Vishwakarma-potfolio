@@ -12,6 +12,8 @@ export interface PersonalProfile {
   shortBio: string;
   aboutLong: string[];
   avatarUrl: string;
+  heroLeftPhoto?: string;
+  heroCollagePhotos?: string[];
   location: string;
   email: string;
   phone?: string;
@@ -47,6 +49,11 @@ export interface SkillItem {
   proficiency: number;
   icon: string;
   level: string;
+  description?: string;
+  relatedProjects?: string[];
+  enabled?: boolean;
+  order?: number;
+  iconUrl?: string;
 }
 
 export type ProjectCategory = 'Web Development' | 'Systems & Software' | 'Data & Analysis' | 'College Projects';
@@ -70,17 +77,66 @@ export interface ExperienceItem {
   type: string;
   startDate: string;
   endDate: string;
+  isCurrent?: boolean;
+  location?: string;
+  workMode?: string;
+  logoUrl?: string;
   description: string;
   responsibilities: string[];
+  achievements?: string[];
+  skills?: string[];
+  enabled?: boolean;
+  order?: number;
+}
+
+export interface ExperienceCarouselSettings {
+  heading: string;
+  description: string;
+  speed: 'slow' | 'normal' | 'fast';
+  direction: 'ltr' | 'rtl';
+  autoScroll: boolean;
+  pauseOnHover: boolean;
+  showArrows: boolean;
+  showIndicators: boolean;
+  desktopCards: 2 | 3 | 4;
+  cardGap: 'compact' | 'normal' | 'spacious';
+}
+
+export type CertificateVerificationStatus =
+  | 'Verified'
+  | 'Completed'
+  | 'In Progress'
+  | 'Expired';
+
+export interface CertificationCarouselSettings {
+  heading: string;
+  description: string;
+  speed: 'slow' | 'normal' | 'fast';
+  direction: 'ltr' | 'rtl';
+  autoScroll: boolean;
+  pauseOnHover: boolean;
+  showArrows: boolean;
+  showIndicators: boolean;
+  desktopCards: 2 | 3 | 4;
+  cardGap: 'compact' | 'normal' | 'spacious';
 }
 
 export interface CertificationItem {
   id: string;
   name: string;
   issuingOrg: string;
+  issueDate?: string;
   year: string;
+  expiryDate?: string;
+  credentialId?: string;
   certificateLink: string;
   imageUrl?: string;
+  pdfUrl?: string;
+  certificateDocument?: string;
+  description?: string;
+  verificationStatus?: CertificateVerificationStatus;
+  enabled?: boolean;
+  order?: number;
 }
 
 export interface AchievementItem {
@@ -125,13 +181,17 @@ export interface GoogleSheetsConfig {
 
 export interface PortfolioData {
   updatedAt?: number;
+  skillsOrbitV2?: boolean;
+  experienceV2?: boolean;
   profile: PersonalProfile;
   education: EducationItem[];
   otherSkills?: OtherSkillItem[];
   skills: SkillItem[];
   projects: ProjectItem[];
   experience: ExperienceItem[];
+  experienceSettings?: ExperienceCarouselSettings;
   certifications: CertificationItem[];
+  certificationsSettings?: CertificationCarouselSettings;
   achievements: AchievementItem[];
   sheetsConfig?: GoogleSheetsConfig;
 }

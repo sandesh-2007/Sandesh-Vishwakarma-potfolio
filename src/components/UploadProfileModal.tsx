@@ -18,16 +18,39 @@ export const UploadProfileModal: React.FC<UploadProfileModalProps> = ({ isOpen, 
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  React.useEffect(() => {
+    if (isOpen) {
+      setPreviewUrl(data.profile.avatarUrl || '');
+      setUrlInput(data.profile.avatarUrl || '');
+      setSelectedFile(null);
+      setDragOver(false);
+    }
+  }, [isOpen, data.profile.avatarUrl]);
+
+  React.useEffect(() => {
+    return () => {
+      if (previewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
+
   if (!isOpen) return null;
 
   const handleFileChange = (file: File) => {
-    if (!file.type.startsWith('image/')) {
+    const isImage =
+      file.type.startsWith('image/') ||
+      /\.(png|jpe?g|webp|gif)$/i.test(file.name);
+    if (!isImage) {
       showToast('Please select a valid image file (JPG, PNG, WebP)', 'error');
       return;
     }
-    if (file.size > 15 * 1024 * 1024) {
-      showToast('Image size should be under 15MB', 'error');
+    if (file.size > 25 * 1024 * 1024) {
+      showToast('Image size should be under 25MB', 'error');
       return;
+    }
+    if (previewUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(previewUrl);
     }
     setSelectedFile(file);
     const objectUrl = URL.createObjectURL(file);
@@ -58,10 +81,12 @@ export const UploadProfileModal: React.FC<UploadProfileModalProps> = ({ isOpen, 
             avatarUrl: urlInput.trim(),
           },
         };
-        await updatePortfolio(updated);
-        showToast('Profile image URL updated successfully!', 'success');
-        onClose();
-      } else if (previewUrl && previewUrl !== data.profile.avatarUrl) {
+        const res = await updatePortfolio(updated);
+        if (res.success) {
+          showToast('Profile image URL updated successfully!', 'success');
+          onClose();
+        }
+      } else if (previewUrl && previewUrl !== data.profile.avatarUrl && !previewUrl.startsWith('blob:')) {
         const updated = {
           ...data,
           profile: {
@@ -69,9 +94,11 @@ export const UploadProfileModal: React.FC<UploadProfileModalProps> = ({ isOpen, 
             avatarUrl: previewUrl,
           },
         };
-        await updatePortfolio(updated);
-        showToast('Profile image updated!', 'success');
-        onClose();
+        const res = await updatePortfolio(updated);
+        if (res.success) {
+          showToast('Profile image updated!', 'success');
+          onClose();
+        }
       } else {
         showToast('Please choose an image file or provide a URL', 'info');
       }
@@ -169,11 +196,13 @@ export const UploadProfileModal: React.FC<UploadProfileModalProps> = ({ isOpen, 
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*"
+                accept=".png,.jpg,.jpeg,.webp,.gif,image/*"
                 className="hidden"
                 onChange={(e) => {
-                  if (e.target.files && e.target.files[0]) {
-                    handleFileChange(e.target.files[0]);
+                  const file = e.target.files?.[0];
+                  e.target.value = '';
+                  if (file) {
+                    handleFileChange(file);
                   }
                 }}
               />

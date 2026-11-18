@@ -17,19 +17,12 @@ export const TechIllustration: React.FC<TechIllustrationProps> = ({
 
   return (
     <div className="relative w-full max-w-[520px] aspect-square mx-auto flex items-center justify-center select-none">
-      {/* Ambient background glow rings with orange & amber aura */}
-      <div className={`absolute inset-0 rounded-full blur-3xl animate-pulse-subtle transition-opacity duration-500 ${
-        isLight
-          ? 'bg-gradient-to-tr from-orange-400/20 via-amber-300/25 to-orange-300/15'
-          : 'bg-gradient-to-tr from-orange-600/25 via-amber-600/20 to-orange-400/15'
-      }`} />
-      
       {/* Outer concentric tech rings */}
       <div className={`tech-orbit-ring absolute w-[92%] h-[92%] rounded-full border border-dashed animate-[spin_40s_linear_infinite] transition-colors ${
-        isLight ? 'border-orange-400/30' : 'border-orange-500/20'
+        isLight ? 'border-zinc-300' : 'border-zinc-800'
       }`} />
       <div className={`tech-orbit-ring absolute w-[76%] h-[76%] rounded-full border border-dotted animate-[spin_30s_linear_infinite_reverse] transition-colors ${
-        isLight ? 'border-orange-400/35' : 'border-orange-400/25'
+        isLight ? 'border-zinc-300' : 'border-zinc-800'
       }`} />
 
       {/* Main Central Hub */}
@@ -40,8 +33,8 @@ export const TechIllustration: React.FC<TechIllustrationProps> = ({
         id="tech-terminal-card"
         className={`relative z-10 w-[82%] h-[82%] rounded-3xl backdrop-blur-xl p-6 flex flex-col justify-between overflow-hidden group transition-all duration-500 ${
           isLight
-            ? 'bg-white/95 border border-zinc-200/90 shadow-2xl shadow-orange-500/10 hover:border-orange-500/60 text-zinc-900'
-            : 'bg-zinc-950/90 border border-zinc-800 shadow-2xl shadow-orange-950/40 hover:border-orange-500/60 text-white'
+            ? 'bg-white border border-zinc-200 shadow-lg text-zinc-900'
+            : 'bg-zinc-950 border border-zinc-800 shadow-xl text-white'
         }`}
       >
         {/* Top header bar */}
@@ -140,9 +133,6 @@ export const TechIllustration: React.FC<TechIllustrationProps> = ({
           </div>
         </div>
 
-        {/* Subtle decorative glow overlay */}
-        <div className="absolute -top-12 -right-12 w-32 h-32 bg-orange-500/10 rounded-full blur-2xl pointer-events-none" />
-        <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
       </motion.div>
 
       {/* Floating Orbital Tech Badges */}

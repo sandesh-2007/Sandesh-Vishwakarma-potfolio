@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { PortfolioData, ContactMessage, CertificationItem, OtherSkillItem, GoogleSheetsConfig } from '../types';
-import { initialPortfolioData } from '../data/initialData';
+import { DEFAULT_CERTIFICATIONS_SETTINGS, DEFAULT_EXPERIENCE_SETTINGS, initialPortfolioData } from '../data/initialData';
 import { User } from 'firebase/auth';
 import { 
   googleSignIn, 
@@ -23,6 +23,17 @@ interface Toast {
   message: string;
 }
 
+export type AdminEditTab =
+  | 'profile'
+  | 'education'
+  | 'skills'
+  | 'projects'
+  | 'experience'
+  | 'certifications'
+  | 'achievements'
+  | 'resume'
+  | 'messages';
+
 interface PortfolioContextType {
   data: PortfolioData;
   isLoading: boolean;
@@ -33,9 +44,12 @@ interface PortfolioContextType {
   messages: ContactMessage[];
   loginModalOpen: boolean;
   editModalOpen: boolean;
+  adminEditTab: AdminEditTab;
   sheetsModalOpen: boolean;
   setLoginModalOpen: (open: boolean) => void;
   setEditModalOpen: (open: boolean) => void;
+  setAdminEditTab: (tab: AdminEditTab) => void;
+  openAdminTab: (tab: AdminEditTab) => void;
   setSheetsModalOpen: (open: boolean) => void;
   login: (password: string) => Promise<{ success: boolean; error?: string }>;
   resetPasswordWithGoogle: (newPassword: string, email: string, accessToken?: string) => Promise<{ success: boolean; error?: string }>;
@@ -44,6 +58,8 @@ interface PortfolioContextType {
   resetPortfolio: () => Promise<{ success: boolean; error?: string }>;
   uploadFile: (file: File) => Promise<{ success: boolean; url: string; fileName: string; error?: string }>;
   uploadProfilePhoto: (file: File) => Promise<boolean>;
+  uploadHeroBoxPhoto: (target: 'left' | number, file: File) => Promise<boolean>;
+  removeHeroBoxPhoto: (target: 'left' | number) => Promise<boolean>;
   uploadCertificateDocument: (certId: string, file: File) => Promise<boolean>;
   addNewCertificateWithFile: (newCert: Omit<CertificationItem, 'id'>, file?: File) => Promise<boolean>;
   addOtherSkill: (item: Omit<OtherSkillItem, 'id'>, previewFile?: File, documentFile?: File) => Promise<boolean>;
@@ -77,6 +93,85 @@ const PortfolioContext = createContext<PortfolioContextType | undefined>(undefin
 const LOCAL_STORAGE_KEY = 'sandesh_portfolio_data_v1';
 const TOKEN_KEY = 'sandesh_portfolio_auth_token';
 
+function normalizeSkillsPortfolioData(raw: PortfolioData): PortfolioData {
+  const normalizedSkills = !raw.skillsOrbitV2
+    ? initialPortfolioData.skills.map((skill, idx) => ({
+        ...skill,
+        enabled: skill.enabled !== false,
+        order: typeof skill.order === 'number' ? skill.order : idx,
+        relatedProjects: Array.isArray(skill.relatedProjects) ? skill.relatedProjects : [],
+      }))
+    : (raw.skills || []).map((skill, idx) => ({
+        ...skill,
+        enabled: skill.enabled !== false,
+        order: typeof skill.order === 'number' ? skill.order : idx,
+        relatedProjects: Array.isArray(skill.relatedProjects) ? skill.relatedProjects : [],
+        description: skill.description ?? '',
+      }));
+
+  const normalizedExperience = !raw.experienceV2
+    ? initialPortfolioData.experience.map((exp, idx) => ({
+        ...exp,
+        enabled: exp.enabled !== false,
+        order: typeof exp.order === 'number' ? exp.order : idx,
+        isCurrent: exp.isCurrent ?? exp.endDate?.toLowerCase() === 'present',
+        achievements: Array.isArray(exp.achievements) ? exp.achievements : [],
+        skills: Array.isArray(exp.skills) ? exp.skills : [],
+      }))
+    : (raw.experience || []).map((exp, idx) => ({
+        ...exp,
+        enabled: exp.enabled !== false,
+        order: typeof exp.order === 'number' ? exp.order : idx,
+        isCurrent: exp.isCurrent ?? exp.endDate?.toLowerCase() === 'present',
+        responsibilities: Array.isArray(exp.responsibilities) ? exp.responsibilities : [],
+        achievements: Array.isArray(exp.achievements) ? exp.achievements : [],
+        skills: Array.isArray(exp.skills) ? exp.skills : [],
+      }));
+
+  const normalizedCertifications = (raw.certifications || initialPortfolioData.certifications || []).map((cert, idx) => {
+    const legacyDoc = cert.certificateDocument || (cert.certificateLink !== '#' ? cert.certificateLink : '');
+    const inferredPdf =
+      cert.pdfUrl ||
+      (legacyDoc && legacyDoc.toLowerCase().endsWith('.pdf') ? legacyDoc : undefined);
+    return {
+      ...cert,
+      enabled: cert.enabled !== false,
+      order: typeof cert.order === 'number' ? cert.order : idx,
+      verificationStatus: cert.verificationStatus || 'Verified',
+      pdfUrl: inferredPdf,
+    };
+  });
+
+  const rawCollage = Array.isArray(raw.profile?.heroCollagePhotos)
+    ? raw.profile.heroCollagePhotos
+    : [];
+  const normalizedCollage = Array.from({ length: 11 }, (_, idx) =>
+    typeof rawCollage[idx] === 'string' ? rawCollage[idx] : ''
+  );
+
+  return {
+    ...raw,
+    profile: {
+      ...raw.profile,
+      heroLeftPhoto: raw.profile?.heroLeftPhoto || '',
+      heroCollagePhotos: normalizedCollage,
+    },
+    skillsOrbitV2: true,
+    experienceV2: true,
+    skills: normalizedSkills,
+    experience: normalizedExperience,
+    experienceSettings: {
+      ...DEFAULT_EXPERIENCE_SETTINGS,
+      ...(raw.experienceSettings || {}),
+    },
+    certifications: normalizedCertifications,
+    certificationsSettings: {
+      ...DEFAULT_CERTIFICATIONS_SETTINGS,
+      ...(raw.certificationsSettings || {}),
+    },
+  };
+}
+
 export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [data, setData] = useState<PortfolioData>(() => {
     // Initial sync from localStorage for zero flash of unstyled content
@@ -102,13 +197,18 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({ children 
             parsed.profile.email = initialPortfolioData.profile.email;
           }
         }
-        return parsed;
+        return normalizeSkillsPortfolioData(parsed);
       }
     } catch (e) {
       console.warn('Error reading local portfolio data:', e);
     }
-    return initialPortfolioData;
+    return normalizeSkillsPortfolioData(initialPortfolioData);
   });
+
+  const dataRef = useRef<PortfolioData>(data);
+  useEffect(() => {
+    dataRef.current = data;
+  }, [data]);
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -119,6 +219,7 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({ children 
   const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [adminEditTab, setAdminEditTab] = useState<AdminEditTab>('profile');
   const [sheetsModalOpen, setSheetsModalOpen] = useState(false);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [googleUser, setGoogleUser] = useState<User | null>(null);
@@ -147,7 +248,7 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({ children 
     };
   }, []);
 
-  const THEME_KEY = 'sandesh_portfolio_theme';
+  const THEME_KEY = 'sandesh_portfolio_theme_v2';
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     try {
       const saved = localStorage.getItem(THEME_KEY);
@@ -157,7 +258,7 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({ children 
     } catch (e) {
       console.warn('Error reading theme from storage:', e);
     }
-    return 'dark';
+    return 'light';
   });
 
   useEffect(() => {
@@ -241,24 +342,26 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({ children 
             // keep the local data and sync it back to the server!
             if (localData && localTime > serverTime) {
               console.log('Local portfolio data is newer than server data. Keeping local edits and syncing to server...');
-              setData(localData);
+              const normalizedLocal = normalizeSkillsPortfolioData(localData);
+              setData(normalizedLocal);
+              localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(normalizedLocal));
               fetch('/api/portfolio', {
                 method: 'PUT',
                 headers: {
                   'Content-Type': 'application/json',
                   ...(adminToken ? { Authorization: `Bearer ${adminToken}` } : {})
                 },
-                body: JSON.stringify({ data: localData }),
+                body: JSON.stringify({ data: normalizedLocal }),
               }).catch((syncErr) => console.warn('Background sync to server failed:', syncErr));
               return;
             }
 
-            const merged = {
+            const merged = normalizeSkillsPortfolioData({
               ...serverData,
               otherSkills: serverData.otherSkills && serverData.otherSkills.length > 0
                 ? serverData.otherSkills
                 : (initialPortfolioData.otherSkills || [])
-            };
+            });
             setData(merged);
             localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(merged));
           }
@@ -275,6 +378,16 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({ children 
       isMounted = false;
     };
   }, [adminToken]);
+
+  const handleExpiredSession = () => {
+    setIsAdmin(false);
+    setAdminToken(null);
+    setEditModalOpen(false);
+    setLoginModalOpen(true);
+    try {
+      localStorage.removeItem(TOKEN_KEY);
+    } catch {}
+  };
 
   // Check auth session
   useEffect(() => {
@@ -302,13 +415,18 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({ children 
           if (json.authenticated) {
             setIsAdmin(true);
             return;
-          } else if (res.status === 401) {
-            // Server explicitly revoked the session
-            setIsAdmin(false);
-            setAdminToken(null);
-            localStorage.removeItem(TOKEN_KEY);
-            return;
           }
+          // Server explicitly reported token is invalid/expired
+          setIsAdmin(false);
+          setAdminToken(null);
+          localStorage.removeItem(TOKEN_KEY);
+          return;
+        }
+        if (res.status === 401) {
+          setIsAdmin(false);
+          setAdminToken(null);
+          localStorage.removeItem(TOKEN_KEY);
+          return;
         }
         // If static host or server endpoint unreachable, keep local session valid
         setIsAdmin(true);
@@ -444,15 +562,27 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({ children 
     showToast('Signed out of Edit Mode.', 'info');
   };
 
+  const openAdminTab = (tab: AdminEditTab) => {
+    setAdminEditTab(tab);
+    if (isAdmin) {
+      setEditModalOpen(true);
+    } else {
+      setLoginModalOpen(true);
+    }
+  };
+
   const updatePortfolio = async (newData: PortfolioData): Promise<{ success: boolean; error?: string }> => {
     setIsSaving(true);
 
-    const dataWithTimestamp: PortfolioData = {
+    const dataWithTimestamp: PortfolioData = normalizeSkillsPortfolioData({
       ...newData,
+      skillsOrbitV2: true,
+      experienceV2: true,
       updatedAt: Date.now()
-    };
+    });
 
     // Instant optimistic update
+    dataRef.current = dataWithTimestamp;
     setData(dataWithTimestamp);
     try {
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dataWithTimestamp));
@@ -461,6 +591,7 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({ children 
     }
 
     let savedOnServer = false;
+    let authRejected = false;
     try {
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
@@ -475,15 +606,26 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({ children 
         body: JSON.stringify({ data: dataWithTimestamp }),
       });
 
-      const contentType = res.headers.get('content-type') || '';
-      if (res.ok && contentType.includes('application/json')) {
-        const json = await res.json();
-        if (json.success) {
-          savedOnServer = true;
+      if (res.status === 401) {
+        authRejected = true;
+      } else {
+        const contentType = res.headers.get('content-type') || '';
+        if (res.ok && contentType.includes('application/json')) {
+          const json = await res.json();
+          if (json.success) {
+            savedOnServer = true;
+          }
         }
       }
     } catch (err: any) {
       console.warn('Server PUT endpoint unreachable, saved locally:', err);
+    }
+
+    if (authRejected) {
+      handleExpiredSession();
+      showToast('Admin session expired. Please sign in again to save changes.', 'error');
+      setIsSaving(false);
+      return { success: false, error: 'Unauthorized: Session expired' };
     }
 
     if (savedOnServer) {
@@ -535,16 +677,43 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({ children 
               fileType: file.type
             })
           });
-          const json = await res.json();
+          if (res.status === 401) {
+            handleExpiredSession();
+            resolve({
+              success: false,
+              url: '',
+              fileName: '',
+              error: 'Admin session expired. Please sign in again to upload.'
+            });
+            return;
+          }
+          if (res.status === 413) {
+            resolve({
+              success: false,
+              url: '',
+              fileName: '',
+              error: 'Selected file is too large to upload (max 35MB).'
+            });
+            return;
+          }
+          const json = await res.json().catch(() => ({}));
           if (res.ok && json.fileUrl) {
             resolve({ success: true, url: json.fileUrl, fileName: json.fileName || file.name });
           } else {
-            // Fallback to local data URI
-            resolve({ success: true, url: base64, fileName: file.name });
+            resolve({
+              success: false,
+              url: '',
+              fileName: '',
+              error: json?.error || `Upload failed (HTTP ${res.status})`
+            });
           }
         } catch (e) {
-          // Fallback to data URI for offline/preview
-          resolve({ success: true, url: reader.result as string, fileName: file.name });
+          resolve({
+            success: false,
+            url: '',
+            fileName: '',
+            error: 'Could not reach persistent file storage endpoint'
+          });
         }
       };
       reader.onerror = () => {
@@ -565,11 +734,84 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({ children 
           avatarUrl: res.url
         }
       };
-      await updatePortfolio(updated);
-      showToast('Profile image updated successfully!', 'success');
+      const saveRes = await updatePortfolio(updated);
+      if (saveRes.success) {
+        showToast('Profile image updated successfully!', 'success');
+        return true;
+      }
+      return false;
+    }
+    showToast(res.error || 'Failed to upload profile photo.', 'error');
+    return false;
+  };
+
+  const uploadHeroBoxPhoto = async (target: 'left' | number, file: File): Promise<boolean> => {
+    const isImage =
+      file.type.startsWith('image/') ||
+      /\.(png|jpe?g|webp|gif)$/i.test(file.name);
+    if (!isImage) {
+      showToast('Please select a valid image file (JPG, PNG, WebP).', 'error');
+      return false;
+    }
+    showToast(
+      target === 'left'
+        ? 'Uploading photo to left hero box...'
+        : `Uploading photo to grid box #${target + 1}...`,
+      'info'
+    );
+    const res = await uploadFile(file);
+    if (res.success && res.url) {
+      const latest = dataRef.current;
+      const existingGrid = Array.from({ length: 11 }, (_, idx) =>
+        latest.profile?.heroCollagePhotos?.[idx] || ''
+      );
+      const nextProfile =
+        target === 'left'
+          ? { ...latest.profile, heroLeftPhoto: res.url, heroCollagePhotos: existingGrid }
+          : {
+              ...latest.profile,
+              heroCollagePhotos: existingGrid.map((val, i) => (i === target ? res.url : val)),
+            };
+      const updated: PortfolioData = {
+        ...latest,
+        profile: nextProfile,
+      };
+      const saveRes = await updatePortfolio(updated);
+      if (saveRes.success) {
+        showToast(
+          target === 'left'
+            ? 'Left frame photo uploaded and saved!'
+            : `Box #${target + 1} photo uploaded and saved!`,
+          'success'
+        );
+        return true;
+      }
+      return false;
+    }
+    showToast(res.error || 'Failed to upload photo.', 'error');
+    return false;
+  };
+
+  const removeHeroBoxPhoto = async (target: 'left' | number): Promise<boolean> => {
+    const latest = dataRef.current;
+    const existingGrid = Array.from({ length: 11 }, (_, idx) =>
+      latest.profile?.heroCollagePhotos?.[idx] || ''
+    );
+    const nextProfile =
+      target === 'left'
+        ? { ...latest.profile, heroLeftPhoto: '', heroCollagePhotos: existingGrid }
+        : {
+            ...latest.profile,
+            heroCollagePhotos: existingGrid.map((val, i) => (i === target ? '' : val)),
+          };
+    const saveRes = await updatePortfolio({ ...latest, profile: nextProfile });
+    if (saveRes.success) {
+      showToast(
+        target === 'left' ? 'Left frame photo removed.' : `Box #${target + 1} photo removed.`,
+        'info'
+      );
       return true;
     }
-    showToast('Failed to upload profile photo.', 'error');
     return false;
   };
 
@@ -578,12 +820,15 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({ children 
     const res = await uploadFile(file);
     if (res.success && res.url) {
       const isImage = file.type.startsWith('image/');
+      const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
       const updatedCerts = data.certifications.map((c) => {
         if (c.id === certId) {
           return {
             ...c,
-            certificateLink: res.url,
-            imageUrl: isImage ? res.url : (c.imageUrl || res.url)
+            certificateDocument: res.url,
+            certificateLink: c.certificateLink && c.certificateLink !== '#' && c.certificateLink.startsWith('http') ? c.certificateLink : res.url,
+            imageUrl: isImage ? res.url : c.imageUrl,
+            pdfUrl: isPdf ? res.url : c.pdfUrl,
           };
         }
         return c;
@@ -596,22 +841,27 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({ children 
       showToast('Certificate document uploaded and saved!', 'success');
       return true;
     }
-    showToast('Failed to upload certificate.', 'error');
+    showToast(res.error || 'Failed to upload certificate.', 'error');
     return false;
   };
 
   const addNewCertificateWithFile = async (newCert: Omit<CertificationItem, 'id'>, file?: File): Promise<boolean> => {
     let certUrl = newCert.certificateLink;
     let imgUrl = newCert.imageUrl;
+    let pdfUrl = newCert.pdfUrl;
 
     if (file) {
       showToast('Uploading certificate document...', 'info');
       const res = await uploadFile(file);
-      if (res.success && res.url) {
-        certUrl = res.url;
-        if (file.type.startsWith('image/')) {
-          imgUrl = res.url;
-        }
+      if (!res.success || !res.url) {
+        showToast(res.error || 'Certificate file upload failed', 'error');
+        return false;
+      }
+      certUrl = certUrl && certUrl !== '#' ? certUrl : res.url;
+      if (file.type.startsWith('image/')) {
+        imgUrl = res.url;
+      } else if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+        pdfUrl = res.url;
       }
     }
 
@@ -619,12 +869,21 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({ children 
       ...newCert,
       id: 'cert-' + Date.now(),
       certificateLink: certUrl || '#',
-      imageUrl: imgUrl
+      imageUrl: imgUrl,
+      pdfUrl,
+      enabled: newCert.enabled !== false,
+      order: 0,
+      verificationStatus: newCert.verificationStatus || 'Verified',
     };
+
+    const reordered = [certItem, ...data.certifications].map((item, idx) => ({
+      ...item,
+      order: idx,
+    }));
 
     const updated: PortfolioData = {
       ...data,
-      certifications: [certItem, ...data.certifications]
+      certifications: reordered,
     };
     await updatePortfolio(updated);
     showToast(`Certificate "${certItem.name}" added successfully!`, 'success');
@@ -1183,9 +1442,12 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({ children 
         messages,
         loginModalOpen,
         editModalOpen,
+        adminEditTab,
         sheetsModalOpen,
         setLoginModalOpen,
         setEditModalOpen,
+        setAdminEditTab,
+        openAdminTab,
         setSheetsModalOpen,
         login,
         resetPasswordWithGoogle,
@@ -1194,6 +1456,8 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({ children 
         resetPortfolio,
         uploadFile,
         uploadProfilePhoto,
+        uploadHeroBoxPhoto,
+        removeHeroBoxPhoto,
         uploadCertificateDocument,
         addNewCertificateWithFile,
         addOtherSkill,

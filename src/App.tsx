@@ -2,11 +2,8 @@ import React, { useState } from 'react';
 import { PortfolioProvider, usePortfolio } from './context/PortfolioContext';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
-import { About } from './components/About';
 import { Education } from './components/Education';
-import { OtherSkills } from './components/OtherSkills';
 import { Skills } from './components/Skills';
-import { Projects } from './components/Projects';
 import { Experience } from './components/Experience';
 import { Certifications } from './components/Certifications';
 import { Achievements } from './components/Achievements';
@@ -18,13 +15,13 @@ import { AdminEditPanel } from './components/AdminEditPanel';
 import { ResumeModal } from './components/ResumeModal';
 import { GoogleSheetsModal } from './components/GoogleSheetsModal';
 import { ToastContainer } from './components/ToastContainer';
-import { CursorGlow } from './components/CursorGlow';
-import { HoverGridBackground } from './components/HoverGridBackground';
 import { FloatingNavControls } from './components/FloatingNavControls';
 import { SystemDiagnosticsModal } from './components/SystemDiagnosticsModal';
+import { LoadingScreen } from './components/LoadingScreen';
 
 const PortfolioContent: React.FC = () => {
   const { theme } = usePortfolio();
+  const [showIntroLoader, setShowIntroLoader] = useState(true);
   const [resumeModalOpen, setResumeModalOpen] = useState(false);
   const [surpriseModalOpen, setSurpriseModalOpen] = useState(false);
   const [isGiftDismissed, setIsGiftDismissed] = useState(() => {
@@ -47,15 +44,17 @@ const PortfolioContent: React.FC = () => {
     <div
       className={`min-h-screen flex flex-col transition-colors duration-300 relative ${
         theme === 'dark'
-          ? 'bg-black text-zinc-100 selection:bg-orange-500/30 selection:text-orange-200'
-          : 'bg-zinc-50 text-zinc-900 selection:bg-orange-500/30 selection:text-orange-900'
+          ? 'bg-zinc-950 text-zinc-100 selection:bg-white selection:text-zinc-950'
+          : 'bg-white text-zinc-950 selection:bg-zinc-950 selection:text-white'
       }`}
     >
-      {/* Interactive Background Grid Lines with 10-20% Opacity on Hover */}
-      <HoverGridBackground />
-
-      {/* Orange Neon Light Mouse Cursor Follower */}
-      <CursorGlow />
+      {/* 5-Second Monochrome Loading Page */}
+      {showIntroLoader && (
+        <LoadingScreen
+          durationMs={5000}
+          onComplete={() => setShowIntroLoader(false)}
+        />
+      )}
 
       {/* Navigation Header */}
       <Navbar 
@@ -69,11 +68,8 @@ const PortfolioContent: React.FC = () => {
           onOpenSurpriseModal={() => setSurpriseModalOpen(true)}
           isGiftVisible={!isGiftDismissed}
         />
-        <About />
         <Education />
-        <OtherSkills />
         <Skills />
-        <Projects />
         <Experience />
         <Certifications />
         <Achievements />

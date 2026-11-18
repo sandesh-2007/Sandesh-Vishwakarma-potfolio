@@ -11,9 +11,9 @@ dotenv.config();
 const app = express();
 const PORT = 3000;
 
-// Increase limit for image uploads and portfolio JSON payloads
-app.use(express.json({ limit: '25mb' }));
-app.use(express.urlencoded({ extended: true, limit: '25mb' }));
+// Increase limit for image/PDF uploads and portfolio JSON payloads
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Ensure persistent data directory exists
 const DATA_DIR = path.join(process.cwd(), 'data');
@@ -24,6 +24,7 @@ if (!fs.existsSync(DATA_DIR)) {
 const PORTFOLIO_FILE = path.join(DATA_DIR, 'portfolio.json');
 const MESSAGES_FILE = path.join(DATA_DIR, 'messages.json');
 const AUTH_FILE = path.join(DATA_DIR, 'auth.json');
+const SESSIONS_FILE = path.join(DATA_DIR, 'sessions.json');
 const UPLOADS_DIR = path.join(DATA_DIR, 'uploads');
 if (!fs.existsSync(UPLOADS_DIR)) {
   fs.mkdirSync(UPLOADS_DIR, { recursive: true });
@@ -54,8 +55,44 @@ function getValidPasswords(): string[] {
 app.use('/api/uploads', express.static(UPLOADS_DIR));
 app.use('/uploads', express.static(UPLOADS_DIR));
 
-// In-memory active session tokens for security
+// Persistent active session tokens across dev/server restarts
 const activeSessions = new Map<string, { createdAt: number; expiresAt: number }>();
+
+function loadSessionsFromDisk() {
+  try {
+    if (fs.existsSync(SESSIONS_FILE)) {
+      const raw = JSON.parse(fs.readFileSync(SESSIONS_FILE, 'utf-8'));
+      const now = Date.now();
+      if (raw && typeof raw === 'object') {
+        for (const [token, data] of Object.entries(raw)) {
+          const entry = data as { createdAt?: number; expiresAt?: number };
+          if (entry && typeof entry.expiresAt === 'number' && entry.expiresAt > now) {
+            activeSessions.set(token, {
+              createdAt: entry.createdAt || now,
+              expiresAt: entry.expiresAt,
+            });
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('Could not load sessions.json:', err);
+  }
+}
+
+function saveSessionsToDisk() {
+  try {
+    const obj: Record<string, { createdAt: number; expiresAt: number }> = {};
+    for (const [token, data] of activeSessions.entries()) {
+      obj[token] = data;
+    }
+    fs.writeFileSync(SESSIONS_FILE, JSON.stringify(obj, null, 2), 'utf-8');
+  } catch (err) {
+    console.warn('Could not save sessions.json:', err);
+  }
+}
+
+loadSessionsFromDisk();
 
 function generateToken(): string {
   return crypto.randomBytes(32).toString('hex');
@@ -63,10 +100,15 @@ function generateToken(): string {
 
 function cleanExpiredSessions() {
   const now = Date.now();
+  let changed = false;
   for (const [token, data] of activeSessions.entries()) {
     if (data.expiresAt < now) {
       activeSessions.delete(token);
+      changed = true;
     }
+  }
+  if (changed) {
+    saveSessionsToDisk();
   }
 }
 
@@ -299,6 +341,7 @@ app.post('/api/auth/login', (req, res) => {
     const token = generateToken();
     const expiresAt = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
     activeSessions.set(token, { createdAt: Date.now(), expiresAt });
+    saveSessionsToDisk();
 
     return res.json({
       success: true,
@@ -365,6 +408,7 @@ app.post('/api/auth/reset-password', async (req, res) => {
   const token = generateToken();
   const expiresAt = Date.now() + 24 * 60 * 60 * 1000;
   activeSessions.set(token, { createdAt: Date.now(), expiresAt });
+  saveSessionsToDisk();
 
   return res.json({
     success: true,
@@ -376,6 +420,7 @@ app.post('/api/auth/reset-password', async (req, res) => {
 
 // Admin Authentication: Verify Session
 app.get('/api/auth/verify', (req, res) => {
+  cleanExpiredSessions();
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.json({ authenticated: false });
@@ -395,7 +440,9 @@ app.post('/api/auth/logout', (req, res) => {
   const authHeader = req.headers.authorization;
   if (authHeader && authHeader.startsWith('Bearer ')) {
     const token = authHeader.split(' ')[1];
-    activeSessions.delete(token);
+    if (activeSessions.delete(token)) {
+      saveSessionsToDisk();
+    }
   }
   res.json({ success: true, message: 'Logged out successfully' });
 });
@@ -422,8 +469,8 @@ app.get('/api/portfolio', (req, res) => {
   }
 });
 
-// Portfolio: PUT update portfolio data
-app.put('/api/portfolio', (req, res) => {
+// Portfolio: PUT update portfolio data (Protected)
+app.put('/api/portfolio', requireAuth, (req, res) => {
   try {
     const { data } = req.body;
     if (!data) {
@@ -546,22 +593,30 @@ app.get('/api/messages', requireAuth, (req, res) => {
   }
 });
 
-// File / Image Upload endpoint (Profile images, certificates, resumes, etc.)
-app.post('/api/upload', (req, res) => {
+// File / Image Upload endpoint (Protected: Admin only)
+app.post('/api/upload', requireAuth, (req, res) => {
   try {
-    const { fileData, fileName, fileType } = req.body;
-    if (!fileData || !fileName) {
+    const { fileData, fileName } = req.body;
+    if (!fileData || typeof fileData !== 'string' || !fileName) {
       return res.status(400).json({ error: 'Missing file payload or filename' });
     }
 
-    // Parse base64 data
-    const matches = fileData.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
-    if (!matches || matches.length !== 3) {
+    // Parse base64 data (handles empty MIME, extra parameters like charset, or special MIME chars like svg+xml)
+    const matches = fileData.match(/^data:([^;]*)(?:;[^;]*)*;base64,([\s\S]+)$/);
+    if (!matches || matches.length < 3) {
       return res.status(400).json({ error: 'Invalid base64 data encoding' });
     }
 
-    const buffer = Buffer.from(matches[2], 'base64');
-    const safeName = `${Date.now()}_${fileName.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+    const base64Clean = matches[2].replace(/\s+/g, '');
+    const buffer = Buffer.from(base64Clean, 'base64');
+    if (buffer.length === 0) {
+      return res.status(400).json({ error: 'Uploaded file payload is empty' });
+    }
+
+    if (!fs.existsSync(UPLOADS_DIR)) {
+      fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+    }
+    const safeName = `${Date.now()}_${String(fileName).replace(/[^a-zA-Z0-9._-]/g, '_')}`;
     const filePath = path.join(UPLOADS_DIR, safeName);
     fs.writeFileSync(filePath, buffer);
 

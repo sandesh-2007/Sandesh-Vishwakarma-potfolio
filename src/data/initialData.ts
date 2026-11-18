@@ -1,4 +1,36 @@
-import { PortfolioData } from '../types';
+import {
+  CertificationCarouselSettings,
+  ExperienceCarouselSettings,
+  PortfolioData,
+} from '../types';
+
+export const DEFAULT_EXPERIENCE_SETTINGS: ExperienceCarouselSettings = {
+  heading: 'Experience',
+  description:
+    'Continuous roles across cooperative finance, volunteer leadership, and web development initiatives.',
+  speed: 'normal',
+  direction: 'ltr',
+  autoScroll: true,
+  pauseOnHover: true,
+  showArrows: true,
+  showIndicators: true,
+  desktopCards: 3,
+  cardGap: 'normal',
+};
+
+export const DEFAULT_CERTIFICATIONS_SETTINGS: CertificationCarouselSettings = {
+  heading: 'Licenses & Certifications',
+  description:
+    'Verified qualifications and certificate documents validating skills in IT, computer systems, and development.',
+  speed: 'normal',
+  direction: 'ltr',
+  autoScroll: true,
+  pauseOnHover: true,
+  showArrows: true,
+  showIndicators: true,
+  desktopCards: 3,
+  cardGap: 'normal',
+};
 
 export const initialPortfolioData: PortfolioData = {
   profile: {
@@ -12,6 +44,8 @@ export const initialPortfolioData: PortfolioData = {
       "Always proactive in upskilling, I constantly explore emerging frameworks, modern UI/UX principles, and AI-driven developer productivity tools. I am actively seeking freelance opportunities and future industry roles where I can contribute meaningful value and collaborate with visionary teams."
     ],
     avatarUrl: '/sandesh_profile.jpg',
+    heroLeftPhoto: '',
+    heroCollagePhotos: Array(11).fill(''),
     location: 'Mumbai, Maharashtra, India',
     email: 'sandesh.vishwakarma2007@gmail.com',
     phone: '+91 91370 00000',
@@ -115,20 +149,140 @@ export const initialPortfolioData: PortfolioData = {
       toolsUsed: ['Canva', 'Social Media Graphics', 'Content Design', 'Typography']
     }
   ],
+  skillsOrbitV2: true,
   skills: [
-    { id: 'sk-1', name: 'HTML5', category: 'Frontend', proficiency: 95, icon: 'FileCode2', level: 'Advanced' },
-    { id: 'sk-2', name: 'CSS3 & Tailwind', category: 'Frontend', proficiency: 90, icon: 'Palette', level: 'Advanced' },
-    { id: 'sk-3', name: 'JavaScript (ES6+)', category: 'Frontend', proficiency: 88, icon: 'Sparkles', level: 'Proficient' },
-    { id: 'sk-4', name: 'React', category: 'Frontend', proficiency: 82, icon: 'Atom', level: 'Intermediate' },
-    { id: 'sk-5', name: 'TypeScript', category: 'Frontend', proficiency: 78, icon: 'Layers', level: 'Intermediate' },
-    { id: 'sk-6', name: 'C / C++', category: 'Programming', proficiency: 85, icon: 'Cpu', level: 'Proficient' },
-    { id: 'sk-7', name: 'Python', category: 'Programming', proficiency: 80, icon: 'Terminal', level: 'Intermediate' },
-    { id: 'sk-8', name: 'SQL & Relational DBs', category: 'Data & Tools', proficiency: 85, icon: 'Database', level: 'Proficient' },
-    { id: 'sk-9', name: 'Advanced Excel', category: 'Data & Tools', proficiency: 92, icon: 'Sheet', level: 'Advanced' },
-    { id: 'sk-10', name: 'Git & GitHub', category: 'Data & Tools', proficiency: 86, icon: 'GitBranch', level: 'Proficient' },
-    { id: 'sk-11', name: 'Figma', category: 'Design & AI', proficiency: 80, icon: 'Figma', level: 'Intermediate' },
-    { id: 'sk-12', name: 'Canva', category: 'Design & AI', proficiency: 92, icon: 'Image', level: 'Advanced' },
-    { id: 'sk-13', name: 'AI Developer Tools', category: 'Design & AI', proficiency: 88, icon: 'Bot', level: 'Proficient' }
+    {
+      id: 'sk-react',
+      name: 'React',
+      category: 'Frontend',
+      proficiency: 88,
+      icon: 'React',
+      level: 'Proficient',
+      description: 'Building modular, component-driven SPAs with hooks, reactive state management, and crisp interactive UI architecture.',
+      relatedProjects: ["Heaven's Classes Management System", 'Personal Portfolio Website'],
+      enabled: true,
+      order: 0
+    },
+    {
+      id: 'sk-js',
+      name: 'JavaScript',
+      category: 'Frontend',
+      proficiency: 90,
+      icon: 'JavaScript',
+      level: 'Proficient',
+      description: 'Modern ES6+ asynchronous workflows, DOM APIs, interactive motion logic, and client-side application engineering.',
+      relatedProjects: ['Personal Portfolio Website', 'College Academic Portal & Coursework Utilities'],
+      enabled: true,
+      order: 1
+    },
+    {
+      id: 'sk-ts',
+      name: 'TypeScript',
+      category: 'Frontend',
+      proficiency: 84,
+      icon: 'TypeScript',
+      level: 'Proficient',
+      description: 'Static type safety, clean domain contracts, and scalable React + Express codebase maintainability.',
+      relatedProjects: ['Personal Portfolio Website'],
+      enabled: true,
+      order: 2
+    },
+    {
+      id: 'sk-python',
+      name: 'Python',
+      category: 'Programming',
+      proficiency: 82,
+      icon: 'Python',
+      level: 'Intermediate',
+      description: 'Backend automation, system diagnostics scripting, data processing utilities, and structured application logic.',
+      relatedProjects: ['Library Management System', 'Personal Portfolio Website'],
+      enabled: true,
+      order: 3
+    },
+    {
+      id: 'sk-html',
+      name: 'HTML',
+      category: 'Frontend',
+      proficiency: 95,
+      icon: 'HTML',
+      level: 'Advanced',
+      description: 'Semantic document structure, accessible WAI-ARIA landmarks, SEO metadata, and clean web standards.',
+      relatedProjects: ['Personal Portfolio Website', 'College Academic Portal & Coursework Utilities'],
+      enabled: true,
+      order: 4
+    },
+    {
+      id: 'sk-css',
+      name: 'CSS',
+      category: 'Frontend',
+      proficiency: 92,
+      icon: 'CSS',
+      level: 'Advanced',
+      description: 'Responsive CSS Grid and Flexbox systems, custom print stylesheets, and GPU-composited micro-interactions.',
+      relatedProjects: ['Personal Portfolio Website', 'College Academic Portal & Coursework Utilities'],
+      enabled: true,
+      order: 5
+    },
+    {
+      id: 'sk-tailwind',
+      name: 'Tailwind CSS',
+      category: 'Frontend',
+      proficiency: 92,
+      icon: 'Tailwind',
+      level: 'Advanced',
+      description: 'Utility-first monochrome design systems, adaptive light/dark theming, and rapid responsive UI precision.',
+      relatedProjects: ["Heaven's Classes Management System", 'Personal Portfolio Website'],
+      enabled: true,
+      order: 6
+    },
+    {
+      id: 'sk-supabase',
+      name: 'Supabase',
+      category: 'Data & Tools',
+      proficiency: 78,
+      icon: 'Supabase',
+      level: 'Intermediate',
+      description: 'PostgreSQL relational modeling, authentication integration, row-level policies, and persistent data APIs.',
+      relatedProjects: ["Heaven's Classes Management System", 'Library Management System'],
+      enabled: true,
+      order: 7
+    },
+    {
+      id: 'sk-git',
+      name: 'Git',
+      category: 'Data & Tools',
+      proficiency: 86,
+      icon: 'Git',
+      level: 'Proficient',
+      description: 'Distributed version control, clean feature branching, commit history hygiene, and merge conflict resolution.',
+      relatedProjects: ['Personal Portfolio Website', "Heaven's Classes Management System"],
+      enabled: true,
+      order: 8
+    },
+    {
+      id: 'sk-github',
+      name: 'GitHub',
+      category: 'Data & Tools',
+      proficiency: 88,
+      icon: 'GitHub',
+      level: 'Proficient',
+      description: 'Remote source hosting, pull request workflows, issue tracking, and continuous deployment pipelines.',
+      relatedProjects: ['Personal Portfolio Website', 'Library Management System'],
+      enabled: true,
+      order: 9
+    },
+    {
+      id: 'sk-figma',
+      name: 'Figma',
+      category: 'Design & AI',
+      proficiency: 82,
+      icon: 'Figma',
+      level: 'Intermediate',
+      description: 'Component systems, wireframing, minimal typographic layouts, and interactive UI/UX prototyping.',
+      relatedProjects: ['Mobile Banking & Fintech UI/UX Prototype', 'Personal Portfolio Website'],
+      enabled: true,
+      order: 10
+    }
   ],
   projects: [
     {
@@ -187,63 +341,176 @@ export const initialPortfolioData: PortfolioData = {
       featured: false
     }
   ],
+  experienceV2: true,
+  experienceSettings: DEFAULT_EXPERIENCE_SETTINGS,
   experience: [
     {
       id: 'exp-1',
       role: 'Assistant Accountant',
       organization: 'Gopal Co-operative Credit Society Ltd.',
-      type: 'Part-Time',
-      startDate: '2023',
+      type: 'Part-time',
+      startDate: 'Mar 2025',
       endDate: 'Present',
+      isCurrent: true,
+      location: 'Mumbai, Maharashtra, India',
+      workMode: 'Hybrid',
       description: 'Managing day-to-day accounts, balancing cooperative deposit ledgers, and maintaining digital fiscal records.',
       responsibilities: [
         'Accurately recorded daily loan repayments, credit transactions, and member savings entries in financial systems.',
         'Executed end-of-day bank reconciliations and verified discrepancy registers in tally sheets and accounting software.',
         'Prepared monthly financial summaries, balance statements, and ledger audits utilizing advanced Excel spreadsheets.',
         'Collaborated with senior auditors and credit society management to ensure statutory compliance and transparent records.'
-      ]
+      ],
+      achievements: [
+        'Maintained consistent zero-discrepancy daily ledger closings across monthly cooperative audit cycles.'
+      ],
+      skills: ['Microsoft Excel', 'Communication', 'Financial Accounting', 'Bank Reconciliation', 'Tally Prime'],
+      enabled: true,
+      order: 0
+    },
+    {
+      id: 'exp-2',
+      role: 'Accountant & Volunteer',
+      organization: 'National Service Scheme (NSS)',
+      type: 'Volunteer',
+      startDate: 'Jun 2025',
+      endDate: 'Present',
+      isCurrent: true,
+      location: 'Mumbai, Maharashtra, India',
+      workMode: 'Hybrid',
+      description: 'NSS Volunteer & Committee Member coordinating unit event budgets, expense tracking, and community outreach initiatives.',
+      responsibilities: [
+        'NSS Volunteer & Committee Member managing activity budgets, receipts, and resource disbursements.',
+        'Coordinated community service drives, digital literacy workshops, and campus awareness campaigns.'
+      ],
+      achievements: [
+        'Streamlined transparent fund tracking for college NSS unit community programs.'
+      ],
+      skills: ['Teamwork', 'Communication', 'Accounting', 'Community Outreach'],
+      enabled: true,
+      order: 1
+    },
+    {
+      id: 'exp-3',
+      role: 'Accountant',
+      organization: 'Red Ribbon Club, BRAC',
+      type: 'Volunteer',
+      startDate: 'Aug 2026',
+      endDate: 'Present',
+      isCurrent: true,
+      location: 'Mumbai, Maharashtra, India',
+      workMode: 'Hybrid',
+      description: 'RRC Accountant overseeing campaign resource records, event expenditure logs, and club financial accountability.',
+      responsibilities: [
+        'Maintained accurate club financial registers and expenditure summaries for awareness initiatives.',
+        'Supported student organizers with transparent budget planning and voucher verification.'
+      ],
+      achievements: [
+        'Delivered structured financial reporting for inter-collegiate awareness campaigns.'
+      ],
+      skills: ['Accounting', 'Record Keeping', 'Financial Reporting', 'Coordination'],
+      enabled: true,
+      order: 2
+    },
+    {
+      id: 'exp-4',
+      role: 'Volunteer',
+      organization: 'Computer Society of India (CSI)',
+      type: 'Volunteer',
+      startDate: 'Jul 2025',
+      endDate: 'Present',
+      isCurrent: true,
+      location: 'Mumbai, Maharashtra, India',
+      workMode: 'Hybrid',
+      description: 'CSI Volunteer contributing to front-end event interfaces, technical student workshops, and developer community sessions.',
+      responsibilities: [
+        'CSI Volunteer supporting coding seminars, technical symposium logistics, and student engagement.',
+        'Assisted with front-end web pages and digital collateral for CSI chapter events.'
+      ],
+      achievements: [
+        'Supported smooth execution of campus web development and technical workshop series.'
+      ],
+      skills: ['Front-End Development', 'Web Development', 'HTML', 'CSS', 'JavaScript', 'Teamwork'],
+      enabled: true,
+      order: 3
     }
   ],
+  certificationsSettings: DEFAULT_CERTIFICATIONS_SETTINGS,
   certifications: [
     {
       id: 'cert-1',
       name: 'MS-CIT (Maharashtra State Certificate in IT)',
       issuingOrg: 'Maharashtra Knowledge Corporation Limited (MKCL)',
+      issueDate: 'Jul 2023',
       year: '2023',
+      expiryDate: 'No Expiry',
+      credentialId: 'MKCL-MSCIT-2023',
       certificateLink: '#',
-      imageUrl: 'https://images.unsplash.com/photo-1606326608606-aa0b62935f2b?auto=format&fit=crop&w=600&q=80'
+      imageUrl: 'https://images.unsplash.com/photo-1606326608606-aa0b62935f2b?auto=format&fit=crop&w=600&q=80',
+      description: 'State-certified information technology literacy credential covering office productivity, digital tools, and system fundamentals.',
+      verificationStatus: 'Verified',
+      enabled: true,
+      order: 0
     },
     {
       id: 'cert-2',
       name: 'Tally with GST & Financial Accounting',
       issuingOrg: 'Authorized Vocational Training Institute',
+      issueDate: 'Nov 2023',
       year: '2023',
+      expiryDate: 'No Expiry',
+      credentialId: 'TALLY-GST-2023',
       certificateLink: '#',
-      imageUrl: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=600&q=80'
+      imageUrl: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=600&q=80',
+      description: 'Applied accounting certification in voucher management, GST computation, ledger reconciliation, and balance statements.',
+      verificationStatus: 'Verified',
+      enabled: true,
+      order: 1
     },
     {
       id: 'cert-3',
       name: 'Web Development Fundamentals (HTML, CSS, JS)',
       issuingOrg: 'Online Tech Academy & Coursework',
+      issueDate: 'Apr 2024',
       year: '2024',
+      expiryDate: 'No Expiry',
+      credentialId: 'WDF-2024-03',
       certificateLink: '#',
-      imageUrl: 'https://images.unsplash.com/photo-1587620962725-abab7fe55159?auto=format&fit=crop&w=600&q=80'
+      imageUrl: 'https://images.unsplash.com/photo-1587620962725-abab7fe55159?auto=format&fit=crop&w=600&q=80',
+      description: 'Foundational front-end web engineering training covering semantic HTML5, modern CSS layout systems, and ES6+ JavaScript.',
+      verificationStatus: 'Completed',
+      enabled: true,
+      order: 2
     },
     {
       id: 'cert-4',
       name: 'Cybersecurity Basics & Digital Defense',
       issuingOrg: 'Information Security Training Workshop',
+      issueDate: 'Aug 2024',
       year: '2024',
+      expiryDate: 'No Expiry',
+      credentialId: 'CSEC-2024-04',
       certificateLink: '#',
-      imageUrl: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=600&q=80'
+      imageUrl: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=600&q=80',
+      description: 'Workshop credential covering threat awareness, secure authentication practices, and foundational network hygiene.',
+      verificationStatus: 'Verified',
+      enabled: true,
+      order: 3
     },
     {
       id: 'cert-5',
       name: 'Workshops & Technical Seminar Certifications',
       issuingOrg: 'College Tech Committee & Youth Forums',
+      issueDate: 'Oct 2024',
       year: '2024',
+      expiryDate: 'No Expiry',
+      credentialId: 'TSDC-SEM-2024',
       certificateLink: '#',
-      imageUrl: 'https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=600&q=80'
+      imageUrl: 'https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=600&q=80',
+      description: 'Academic seminars and technical symposium certificates validating collaborative engineering and presentation practice.',
+      verificationStatus: 'Completed',
+      enabled: true,
+      order: 4
     }
   ],
   achievements: [

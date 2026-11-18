@@ -1,8 +1,15 @@
-import React, { useState, useRef } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import React, { useEffect, useRef, useState } from 'react';
 import { usePortfolio } from '../context/PortfolioContext';
-import { CertificationItem } from '../types';
-import { Award, Upload, X, Check, FileText, Image as ImageIcon, Calendar, Building, Link as LinkIcon, Trash2 } from 'lucide-react';
+import { CertificateVerificationStatus, CertificationItem } from '../types';
+import {
+  Award,
+  Check,
+  FileText,
+  Image as ImageIcon,
+  Trash2,
+  Upload,
+  X,
+} from 'lucide-react';
 
 interface UploadCertificateModalProps {
   isOpen: boolean;
@@ -10,361 +17,567 @@ interface UploadCertificateModalProps {
   certToEdit?: CertificationItem | null;
 }
 
+const ALLOWED_IMAGE_MIME = [
+  'image/png',
+  'image/x-png',
+  'image/jpeg',
+  'image/jpg',
+  'image/pjpeg',
+  'image/webp',
+];
+
 export const UploadCertificateModal: React.FC<UploadCertificateModalProps> = ({
   isOpen,
   onClose,
   certToEdit,
 }) => {
-  const { data, uploadFile, updatePortfolio, addNewCertificateWithFile, deleteCertification, showToast } = usePortfolio();
+  const { data, isAdmin, uploadFile, updatePortfolio, deleteCertification, showToast } =
+    usePortfolio();
 
-  const [name, setName] = useState(certToEdit?.name || '');
-  const [issuingOrg, setIssuingOrg] = useState(certToEdit?.issuingOrg || '');
-  const [year, setYear] = useState(certToEdit?.year || new Date().getFullYear().toString());
-  const [certificateLink, setCertificateLink] = useState(certToEdit?.certificateLink || '');
-  const [imageUrl, setImageUrl] = useState(certToEdit?.imageUrl || '');
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string>(certToEdit?.imageUrl || certToEdit?.certificateLink || '');
-  const [isUploading, setIsUploading] = useState(false);
-  const [dragOver, setDragOver] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [name, setName] = useState('');
+  const [issuingOrg, setIssuingOrg] = useState('');
+  const [issueDate, setIssueDate] = useState('');
+  const [year, setYear] = useState(new Date().getFullYear().toString());
+  const [expiryDate, setExpiryDate] = useState('');
+  const [credentialId, setCredentialId] = useState('');
+  const [certificateLink, setCertificateLink] = useState('');
+  const [description, setDescription] = useState('');
+  const [verificationStatus, setVerificationStatus] =
+    useState<CertificateVerificationStatus>('Verified');
 
-  // Sync when certToEdit changes
-  React.useEffect(() => {
+  const [imageUrl, setImageUrl] = useState('');
+  const [pdfUrl, setPdfUrl] = useState('');
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
+  const [selectedPdfFile, setSelectedPdfFile] = useState<File | null>(null);
+  const [imageLocalPreview, setImageLocalPreview] = useState('');
+  const [isSavingCert, setIsSavingCert] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
     if (certToEdit) {
-      setName(certToEdit.name);
-      setIssuingOrg(certToEdit.issuingOrg);
-      setYear(certToEdit.year);
-      setCertificateLink(certToEdit.certificateLink || '');
+      setName(certToEdit.name || '');
+      setIssuingOrg(certToEdit.issuingOrg || '');
+      setIssueDate(certToEdit.issueDate || '');
+      setYear(certToEdit.year || new Date().getFullYear().toString());
+      setExpiryDate(certToEdit.expiryDate || '');
+      setCredentialId(certToEdit.credentialId || '');
+      setCertificateLink(
+        certToEdit.certificateLink && certToEdit.certificateLink !== '#'
+          ? certToEdit.certificateLink
+          : ''
+      );
+      setDescription(certToEdit.description || '');
+      setVerificationStatus(certToEdit.verificationStatus || 'Verified');
       setImageUrl(certToEdit.imageUrl || '');
-      setPreviewUrl(certToEdit.imageUrl || certToEdit.certificateLink || '');
+      setPdfUrl(
+        certToEdit.pdfUrl ||
+          (certToEdit.certificateDocument &&
+          certToEdit.certificateDocument.toLowerCase().endsWith('.pdf')
+            ? certToEdit.certificateDocument
+            : '')
+      );
+      setImageLocalPreview(certToEdit.imageUrl || '');
     } else {
       setName('');
       setIssuingOrg('');
+      setIssueDate('');
       setYear(new Date().getFullYear().toString());
+      setExpiryDate('No Expiry');
+      setCredentialId('');
       setCertificateLink('');
+      setDescription('');
+      setVerificationStatus('Verified');
       setImageUrl('');
-      setPreviewUrl('');
+      setPdfUrl('');
+      setImageLocalPreview('');
     }
-    setSelectedFile(null);
+    setSelectedImageFile(null);
+    setSelectedPdfFile(null);
+    setConfirmDelete(false);
   }, [certToEdit, isOpen]);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    return () => {
+      if (imageLocalPreview.startsWith('blob:')) {
+        URL.revokeObjectURL(imageLocalPreview);
+      }
+    };
+  }, [imageLocalPreview]);
 
-  const handleFileChange = (file: File) => {
-    setSelectedFile(file);
-    if (file.type.startsWith('image/')) {
-      const objUrl = URL.createObjectURL(file);
-      setPreviewUrl(objUrl);
-    } else {
-      setPreviewUrl('');
+  if (!isOpen || !isAdmin) return null;
+
+  const handleSelectImage = (file: File) => {
+    const hasValidMime = ALLOWED_IMAGE_MIME.includes(file.type.toLowerCase());
+    const hasValidExt = /\.(png|jpe?g|webp)$/i.test(file.name);
+    if (!hasValidMime && !hasValidExt) {
+      showToast('Please upload a JPG, JPEG, PNG, or WebP image.', 'error');
+      return;
     }
+    if (imageLocalPreview.startsWith('blob:')) {
+      URL.revokeObjectURL(imageLocalPreview);
+    }
+    setSelectedImageFile(file);
+    setImageLocalPreview(URL.createObjectURL(file));
   };
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragOver(false);
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      handleFileChange(e.dataTransfer.files[0]);
+  const handleSelectPdf = (file: File) => {
+    const isPdf =
+      file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+    if (!isPdf) {
+      showToast('Please select a valid PDF document.', 'error');
+      return;
     }
+    setSelectedPdfFile(file);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
-      showToast('Please enter the certificate title', 'error');
+      showToast('Please enter a certificate title.', 'error');
       return;
     }
     if (!issuingOrg.trim()) {
-      showToast('Please enter the issuing authority or institute', 'error');
+      showToast('Please enter the issuing organization.', 'error');
       return;
     }
 
-    setIsUploading(true);
+    setIsSavingCert(true);
     try {
-      let finalCertLink = certificateLink.trim();
       let finalImageUrl = imageUrl.trim();
+      let finalPdfUrl = pdfUrl.trim();
 
-      if (selectedFile) {
-        showToast('Uploading certificate file...', 'info');
-        const uploadRes = await uploadFile(selectedFile);
-        if (uploadRes.success && uploadRes.url) {
-          finalCertLink = uploadRes.url;
-          if (selectedFile.type.startsWith('image/')) {
-            finalImageUrl = uploadRes.url;
-          }
+      if (selectedImageFile) {
+        showToast('Uploading certificate image to persistent storage...', 'info');
+        const imgRes = await uploadFile(selectedImageFile);
+        if (!imgRes.success || !imgRes.url) {
+          showToast(imgRes.error || 'Failed to store certificate image.', 'error');
+          setIsSavingCert(false);
+          return;
         }
+        finalImageUrl = imgRes.url;
       }
 
+      if (selectedPdfFile) {
+        showToast('Uploading certificate PDF to persistent storage...', 'info');
+        const pdfRes = await uploadFile(selectedPdfFile);
+        if (!pdfRes.success || !pdfRes.url) {
+          showToast(pdfRes.error || 'Failed to store certificate PDF.', 'error');
+          setIsSavingCert(false);
+          return;
+        }
+        finalPdfUrl = pdfRes.url;
+      }
+
+      const finalCertLink =
+        certificateLink.trim() || finalPdfUrl || finalImageUrl || '#';
+
       if (certToEdit) {
-        // Update existing certificate
-        const updatedCertifications = data.certifications.map((c) => {
-          if (c.id === certToEdit.id) {
-            return {
-              ...c,
-              name: name.trim(),
-              issuingOrg: issuingOrg.trim(),
-              year: year.trim(),
-              certificateLink: finalCertLink || '#',
-              imageUrl: finalImageUrl || c.imageUrl,
-            };
-          }
-          return c;
+        const updatedList = data.certifications.map((c) => {
+          if (c.id !== certToEdit.id) return c;
+          return {
+            ...c,
+            name: name.trim(),
+            issuingOrg: issuingOrg.trim(),
+            issueDate: issueDate.trim() || undefined,
+            year: year.trim() || new Date().getFullYear().toString(),
+            expiryDate: expiryDate.trim() || undefined,
+            credentialId: credentialId.trim() || undefined,
+            certificateLink: finalCertLink,
+            imageUrl: finalImageUrl || undefined,
+            pdfUrl: finalPdfUrl || undefined,
+            certificateDocument: finalPdfUrl || finalImageUrl || undefined,
+            description: description.trim() || undefined,
+            verificationStatus,
+          };
         });
 
-        await updatePortfolio({
-          ...data,
-          certifications: updatedCertifications,
-        });
-        showToast(`Certificate "${name}" updated successfully!`, 'success');
+        await updatePortfolio({ ...data, certifications: updatedList });
+        showToast(`Certificate "${name.trim()}" updated successfully!`, 'success');
       } else {
-        // Create new certificate
-        const newCertItem: CertificationItem = {
+        const newCert: CertificationItem = {
           id: 'cert-' + Date.now(),
           name: name.trim(),
           issuingOrg: issuingOrg.trim(),
-          year: year.trim(),
-          certificateLink: finalCertLink || '#',
+          issueDate: issueDate.trim() || undefined,
+          year: year.trim() || new Date().getFullYear().toString(),
+          expiryDate: expiryDate.trim() || undefined,
+          credentialId: credentialId.trim() || undefined,
+          certificateLink: finalCertLink,
           imageUrl: finalImageUrl || undefined,
+          pdfUrl: finalPdfUrl || undefined,
+          certificateDocument: finalPdfUrl || finalImageUrl || undefined,
+          description: description.trim() || undefined,
+          verificationStatus,
+          enabled: true,
+          order: 0,
         };
 
-        await updatePortfolio({
-          ...data,
-          certifications: [newCertItem, ...data.certifications],
-        });
-        showToast(`New Certificate "${name}" added successfully!`, 'success');
+        const reordered = [newCert, ...data.certifications].map((item, idx) => ({
+          ...item,
+          order: idx,
+        }));
+
+        await updatePortfolio({ ...data, certifications: reordered });
+        showToast(`Certificate "${newCert.name}" added successfully!`, 'success');
       }
 
       onClose();
-    } catch (err) {
-      showToast('Failed to save certificate', 'error');
     } finally {
-      setIsUploading(false);
+      setIsSavingCert(false);
     }
   };
 
   return (
-    <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 15 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 15 }}
-          transition={{ duration: 0.25 }}
-          className="relative w-full max-w-lg bg-zinc-950 border border-orange-500/30 rounded-3xl p-6 sm:p-7 shadow-2xl shadow-orange-950/40 text-white my-8 overflow-hidden"
-        >
-          {/* Decorative orange background glow */}
-          <div className="absolute -top-16 -right-16 w-40 h-40 bg-orange-600/20 rounded-full blur-3xl pointer-events-none" />
-
-          {/* Header */}
-          <div className="flex items-center justify-between pb-4 border-b border-zinc-800">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-orange-400">
-                <Award className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-white tracking-tight">
-                  {certToEdit ? 'Edit & Upload Certificate' : 'Upload New Certificate'}
-                </h3>
-                <p className="text-xs text-zinc-400">
-                  Attach certificates (images or PDFs) to showcase verified credentials
-                </p>
-              </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm overflow-y-auto">
+      <div className="fixed inset-0" onClick={onClose} />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={certToEdit ? 'Edit certificate' : 'Add certificate'}
+        className="relative z-10 w-full max-w-2xl bg-zinc-950 border border-zinc-800 p-6 sm:p-7 shadow-2xl text-white my-8 max-h-[90vh] overflow-y-auto"
+      >
+        {/* Header */}
+        <div className="flex items-start justify-between pb-4 border-b border-zinc-800">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 border border-zinc-800 bg-zinc-900 flex items-center justify-center text-white">
+              <Award className="w-5 h-5" />
             </div>
-            <button
-              onClick={onClose}
-              className="p-2 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4 pt-4">
-            {/* Title */}
             <div>
-              <label className="block text-xs font-semibold text-zinc-300 mb-1">
-                Certificate Name / Course Title <span className="text-orange-500">*</span>
+              <h3 className="text-lg font-bold tracking-tight text-white">
+                {certToEdit ? 'Edit Certificate' : 'Add New Certificate'}
+              </h3>
+              <p className="text-xs font-mono text-zinc-400">
+                Upload certificate image (JPG, PNG, WebP) and/or PDF document
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close certificate form"
+            className="p-2 border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-500 transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4 pt-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="sm:col-span-2">
+              <label className="block text-[11px] font-mono text-zinc-400 mb-1">
+                Certificate Title *
               </label>
               <input
                 type="text"
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Certified Web Developer / MS-CIT / Python"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-white placeholder-zinc-500 text-sm focus:outline-none focus:border-orange-500 transition-colors"
+                placeholder="e.g. MS-CIT / AWS Certified Cloud Practitioner"
+                className="w-full px-3 py-2 bg-zinc-900 border border-zinc-700 text-xs text-white"
               />
             </div>
 
-            {/* Issuing Authority & Year */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-semibold text-zinc-300 mb-1">
-                  Issuing Organization <span className="text-orange-500">*</span>
-                </label>
-                <div className="relative">
-                  <Building className="w-4 h-4 absolute left-3 top-3 text-zinc-500" />
-                  <input
-                    type="text"
-                    required
-                    value={issuingOrg}
-                    onChange={(e) => setIssuingOrg(e.target.value)}
-                    placeholder="e.g. Coursera / HackerRank / MKCL"
-                    className="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-white placeholder-zinc-500 text-sm focus:outline-none focus:border-orange-500 transition-colors"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-zinc-300 mb-1">
-                  Year Issued
-                </label>
-                <div className="relative">
-                  <Calendar className="w-4 h-4 absolute left-3 top-3 text-zinc-500" />
-                  <input
-                    type="text"
-                    value={year}
-                    onChange={(e) => setYear(e.target.value)}
-                    placeholder="e.g. 2024"
-                    className="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-white placeholder-zinc-500 text-sm focus:outline-none focus:border-orange-500 transition-colors"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Certificate File Upload Area */}
             <div>
-              <label className="block text-xs font-semibold text-zinc-300 mb-1">
-                Upload Certificate Document / Image
+              <label className="block text-[11px] font-mono text-zinc-400 mb-1">
+                Issuing Organization *
               </label>
-
               <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*,.pdf"
-                className="hidden"
-                onChange={(e) => {
-                  if (e.target.files && e.target.files[0]) {
-                    handleFileChange(e.target.files[0]);
-                  }
-                }}
+                type="text"
+                required
+                value={issuingOrg}
+                onChange={(e) => setIssuingOrg(e.target.value)}
+                placeholder="e.g. MKCL / Coursera / Google"
+                className="w-full px-3 py-2 bg-zinc-900 border border-zinc-700 text-xs text-white"
               />
-
-              <div
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  setDragOver(true);
-                }}
-                onDragLeave={() => setDragOver(false)}
-                onDrop={handleDrop}
-                onClick={() => fileInputRef.current?.click()}
-                className={`cursor-pointer rounded-2xl border-2 border-dashed p-4 text-center transition-all ${
-                  dragOver
-                    ? 'border-orange-500 bg-orange-950/25'
-                    : 'border-zinc-800 hover:border-orange-500/60 bg-zinc-900/60'
-                }`}
-              >
-                <div className="w-10 h-10 mx-auto rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400 mb-2">
-                  <Upload className="w-5 h-5" />
-                </div>
-                <p className="text-xs sm:text-sm font-semibold text-white">
-                  Click to choose file or drag certificate here
-                </p>
-                <p className="text-[11px] text-zinc-400 mt-0.5">
-                  Supports Images (PNG, JPG, WebP) or PDF documents
-                </p>
-
-                {selectedFile ? (
-                  <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-950/70 border border-orange-500/40 text-xs font-mono text-orange-300">
-                    <FileText className="w-3.5 h-3.5 text-orange-400" />
-                    <span className="truncate max-w-[220px]">{selectedFile.name}</span>
-                  </div>
-                ) : previewUrl ? (
-                  <div className="mt-3 flex items-center justify-center gap-2">
-                    <span className="text-[11px] text-emerald-400 flex items-center gap-1">
-                      <Check className="w-3.5 h-3.5" /> Certificate File Attached
-                    </span>
-                  </div>
-                ) : null}
-              </div>
-
-              {/* Preview Thumbnail if image */}
-              {previewUrl && previewUrl.startsWith('data:image') || (previewUrl && previewUrl.match(/\.(jpeg|jpg|png|webp)/i)) ? (
-                <div className="mt-2 relative w-full h-24 rounded-xl overflow-hidden border border-zinc-800 bg-black">
-                  <img
-                    src={previewUrl}
-                    alt="Certificate preview"
-                    className="w-full h-full object-cover"
-                  />
-                  <span className="absolute bottom-1 right-2 text-[10px] font-mono px-2 py-0.5 rounded bg-black/80 text-zinc-300">
-                    Preview
-                  </span>
-                </div>
-              ) : null}
             </div>
 
-            {/* Optional Verification / Public Link */}
             <div>
-              <label className="block text-xs font-semibold text-zinc-300 mb-1">
-                Certificate Link / Verification URL (Optional)
+              <label className="block text-[11px] font-mono text-zinc-400 mb-1">
+                Verification Status
               </label>
-              <div className="relative">
-                <LinkIcon className="w-4 h-4 absolute left-3 top-3 text-zinc-500" />
+              <select
+                value={verificationStatus}
+                onChange={(e) =>
+                  setVerificationStatus(e.target.value as CertificateVerificationStatus)
+                }
+                className="w-full px-3 py-2 bg-zinc-900 border border-zinc-700 text-xs text-white"
+              >
+                <option value="Verified">Verified</option>
+                <option value="Completed">Completed</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Expired">Expired</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-mono text-zinc-400 mb-1">
+                Issue Date
+              </label>
+              <input
+                type="text"
+                value={issueDate}
+                onChange={(e) => setIssueDate(e.target.value)}
+                placeholder="e.g. Jul 2024"
+                className="w-full px-3 py-2 bg-zinc-900 border border-zinc-700 text-xs text-white"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="block text-[11px] font-mono text-zinc-400 mb-1">
+                  Year
+                </label>
                 <input
-                  type="url"
-                  value={certificateLink}
-                  onChange={(e) => setCertificateLink(e.target.value)}
-                  placeholder="https://coursera.org/verify/..."
-                  className="w-full pl-9 pr-3.5 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-white placeholder-zinc-500 text-xs focus:outline-none focus:border-orange-500 transition-colors"
+                  type="text"
+                  value={year}
+                  onChange={(e) => setYear(e.target.value)}
+                  placeholder="2024"
+                  className="w-full px-3 py-2 bg-zinc-900 border border-zinc-700 text-xs text-white"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-mono text-zinc-400 mb-1">
+                  Expiry Date
+                </label>
+                <input
+                  type="text"
+                  value={expiryDate}
+                  onChange={(e) => setExpiryDate(e.target.value)}
+                  placeholder="No Expiry"
+                  className="w-full px-3 py-2 bg-zinc-900 border border-zinc-700 text-xs text-white"
                 />
               </div>
             </div>
 
-            {/* Submit buttons */}
-            <div className="flex items-center gap-3 pt-4 border-t border-zinc-800">
-              {certToEdit && (
+            <div>
+              <label className="block text-[11px] font-mono text-zinc-400 mb-1">
+                Credential ID
+              </label>
+              <input
+                type="text"
+                value={credentialId}
+                onChange={(e) => setCredentialId(e.target.value)}
+                placeholder="e.g. MKCL-2024-8821"
+                className="w-full px-3 py-2 bg-zinc-900 border border-zinc-700 text-xs text-white"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-mono text-zinc-400 mb-1">
+                Credential Verification URL
+              </label>
+              <input
+                type="text"
+                value={certificateLink}
+                onChange={(e) => setCertificateLink(e.target.value)}
+                placeholder="https://verify.example.com/..."
+                className="w-full px-3 py-2 bg-zinc-900 border border-zinc-700 text-xs text-white"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-mono text-zinc-400 mb-1">
+              Description
+            </label>
+            <textarea
+              rows={2}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Skills covered, coursework details, or credential overview..."
+              className="w-full px-3 py-2 bg-zinc-900 border border-zinc-700 text-xs text-white resize-none"
+            />
+          </div>
+
+          {/* Persistent Upload Slots: Image & PDF */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            {/* Image Upload */}
+            <div className="p-3 border border-zinc-800 bg-zinc-900 space-y-2.5">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs font-mono font-semibold text-white inline-flex items-center gap-1.5">
+                  <ImageIcon className="w-3.5 h-3.5" />
+                  <span>Certificate Image</span>
+                </span>
+                {(imageLocalPreview || imageUrl) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setImageUrl('');
+                      setSelectedImageFile(null);
+                      setImageLocalPreview('');
+                    }}
+                    className="text-[11px] font-mono text-zinc-400 hover:text-rose-400"
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+
+              {imageLocalPreview && (
+                <div className="w-full h-24 border border-zinc-800 bg-zinc-950 overflow-hidden">
+                  <img
+                    src={imageLocalPreview}
+                    alt="Certificate preview"
+                    className="w-full h-full object-cover"
+                    referrerPolicy="no-referrer"
+                  />
+                </div>
+              )}
+
+              <input
+                ref={imageInputRef}
+                type="file"
+                accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  e.target.value = '';
+                  if (file) handleSelectImage(file);
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => imageInputRef.current?.click()}
+                className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 border border-zinc-700 bg-zinc-950 hover:border-zinc-500 text-xs font-mono text-white"
+              >
+                <Upload className="w-3.5 h-3.5" />
+                <span>
+                  {selectedImageFile
+                    ? selectedImageFile.name
+                    : imageUrl
+                      ? 'Replace Image'
+                      : 'Upload Image (JPG/PNG/WebP)'}
+                </span>
+              </button>
+            </div>
+
+            {/* PDF Upload */}
+            <div className="p-3 border border-zinc-800 bg-zinc-900 space-y-2.5">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs font-mono font-semibold text-white inline-flex items-center gap-1.5">
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>PDF Certificate</span>
+                </span>
+                {(selectedPdfFile || pdfUrl) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPdfUrl('');
+                      setSelectedPdfFile(null);
+                    }}
+                    className="text-[11px] font-mono text-zinc-400 hover:text-rose-400"
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+
+              <div className="h-24 border border-zinc-800 bg-zinc-950 p-3 flex flex-col items-center justify-center text-center">
+                <FileText className="w-5 h-5 text-zinc-400 mb-1" />
+                <span className="text-[11px] font-mono text-zinc-300 truncate max-w-full">
+                  {selectedPdfFile
+                    ? `Selected: ${selectedPdfFile.name}`
+                    : pdfUrl
+                      ? `Stored: ${pdfUrl.split('/').pop()}`
+                      : 'No PDF attached'}
+                </span>
+              </div>
+
+              <input
+                ref={pdfInputRef}
+                type="file"
+                accept=".pdf,application/pdf"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  e.target.value = '';
+                  if (file) handleSelectPdf(file);
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => pdfInputRef.current?.click()}
+                className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 border border-zinc-700 bg-zinc-950 hover:border-zinc-500 text-xs font-mono text-white"
+              >
+                <Upload className="w-3.5 h-3.5" />
+                <span>{pdfUrl ? 'Replace PDF' : 'Upload PDF File'}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Delete Confirmation Row */}
+          {certToEdit && confirmDelete && (
+            <div className="p-3 border border-rose-800 bg-rose-950/30 flex flex-wrap items-center justify-between gap-2 text-xs font-mono">
+              <span className="text-rose-300">
+                Permanently remove &quot;{certToEdit.name}&quot;?
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setConfirmDelete(false)}
+                  className="px-2.5 py-1 border border-zinc-700 text-zinc-300"
+                >
+                  Cancel
+                </button>
                 <button
                   type="button"
                   onClick={async () => {
-                    if (window.confirm(`Are you sure you want to remove certificate "${certToEdit.name}"?`)) {
-                      await deleteCertification(certToEdit.id);
-                      onClose();
-                    }
+                    await deleteCertification(certToEdit.id);
+                    onClose();
                   }}
-                  className="p-2.5 rounded-xl text-xs font-semibold text-red-400 bg-red-950/40 border border-red-900/60 hover:bg-red-900/60 hover:text-red-200 transition-colors flex items-center gap-1.5"
-                  title="Remove this certificate"
+                  className="px-2.5 py-1 bg-rose-700 text-white font-semibold"
                 >
-                  <Trash2 className="w-4 h-4" />
-                  <span>Delete</span>
+                  Confirm Delete
                 </button>
-              )}
+              </div>
+            </div>
+          )}
+
+          {/* Footer Actions */}
+          <div className="flex items-center justify-between gap-3 pt-4 border-t border-zinc-800">
+            {certToEdit ? (
+              <button
+                type="button"
+                onClick={() => setConfirmDelete(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-2 border border-zinc-800 text-xs font-mono text-zinc-400 hover:text-rose-400 hover:border-rose-800"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Delete</span>
+              </button>
+            ) : (
+              <span />
+            )}
+
+            <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 py-2.5 px-4 rounded-xl text-xs font-semibold text-zinc-300 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 hover:text-white transition-colors"
+                className="px-4 py-2 border border-zinc-800 bg-zinc-900 text-xs font-mono text-zinc-300 hover:text-white"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                disabled={isUploading}
-                className="flex-1 py-2.5 px-4 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-400 shadow-md shadow-orange-950/50 transition-all disabled:opacity-50 flex items-center justify-center gap-1.5"
+                disabled={isSavingCert}
+                className="inline-flex items-center gap-1.5 px-4 py-2 border border-zinc-700 bg-zinc-950 keep-dark text-white keep-white hover:bg-zinc-800 text-xs font-mono font-semibold disabled:opacity-50"
               >
-                {isUploading ? (
-                  <>
-                    <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>Uploading...</span>
-                  </>
-                ) : (
-                  <>
-                    <Check className="w-4 h-4" />
-                    <span>{certToEdit ? 'Save Changes' : 'Upload Certificate'}</span>
-                  </>
-                )}
+                <Check className="w-3.5 h-3.5" />
+                <span>
+                  {isSavingCert
+                    ? 'Saving...'
+                    : certToEdit
+                      ? 'Save Certificate'
+                      : 'Publish Certificate'}
+                </span>
               </button>
             </div>
-          </form>
-        </motion.div>
+          </div>
+        </form>
       </div>
-    </AnimatePresence>
+    </div>
   );
 };

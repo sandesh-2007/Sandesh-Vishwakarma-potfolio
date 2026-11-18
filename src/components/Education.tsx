@@ -1,115 +1,142 @@
 import React from 'react';
-import { motion } from 'motion/react';
 import { usePortfolio } from '../context/PortfolioContext';
-import { GraduationCap, Calendar, Building, ExternalLink, Sparkles, Award } from 'lucide-react';
+import { GraduationCap, ExternalLink } from 'lucide-react';
 
 export const Education: React.FC = () => {
-  const { data } = usePortfolio();
+  const { data, theme } = usePortfolio();
+  const isLight = theme === 'light';
   const { education } = data;
 
   return (
-    <section id="education" className="py-24 relative overflow-hidden bg-transparent">
-      {/* Background ambient lighting */}
-      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-3/4 h-80 bg-orange-600/10 rounded-full blur-3xl pointer-events-none" />
-
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        
-        {/* Section Header */}
-        <div className="flex flex-col items-center text-center mb-16">
-          <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-orange-950/60 border border-orange-500/30 text-orange-400 text-xs font-mono uppercase tracking-wider mb-3">
-            <GraduationCap className="w-3.5 h-3.5" />
-            <span>Academic Background</span>
+    <section
+      id="education"
+      className={`py-20 sm:py-24 border-b transition-colors ${
+        isLight ? 'border-zinc-200 bg-zinc-50/40' : 'border-zinc-800 bg-zinc-950'
+      }`}
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Clean Editorial Header */}
+        <div
+          className={`pb-10 mb-12 border-b flex flex-col md:flex-row md:items-end justify-between gap-4 ${
+            isLight ? 'border-zinc-200' : 'border-zinc-800'
+          }`}
+        >
+          <div>
+            <p className={`text-xs font-mono uppercase tracking-wider mb-2 ${isLight ? 'text-zinc-500' : 'text-zinc-400'}`}>
+              02 · Academic Timeline
+            </p>
+            <h2
+              className={`font-display text-3xl sm:text-5xl font-extrabold tracking-tight ${
+                isLight ? 'text-zinc-950' : 'text-white'
+              }`}
+            >
+              Education & Qualifications
+            </h2>
           </div>
-          <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white">
-            Education & <span className="glow-gradient-text">Qualifications</span>
-          </h2>
-          <p className="mt-3 text-zinc-400 max-w-2xl text-sm sm:text-base">
+          <p className={`max-w-xl text-sm sm:text-base ${isLight ? 'text-zinc-600' : 'text-zinc-400'}`}>
             Formal technical education, foundational coursework, and continuous academic milestones.
           </p>
         </div>
 
-        {/* Timeline Component */}
-        <div className="relative">
-          {/* Vertical timeline spine line */}
-          <div className="hidden md:block absolute left-1/2 top-4 bottom-4 w-0.5 -translate-x-1/2 bg-gradient-to-b from-orange-500 via-amber-500 to-orange-900/40" />
+        {/* Clean Vercel Monochrome Vertical Timeline */}
+        <div className="relative max-w-4xl">
+          {/* Left Spine */}
+          <div
+            className={`hidden sm:block absolute left-3 top-2 bottom-2 w-px ${
+              isLight ? 'bg-zinc-200' : 'bg-zinc-800'
+            }`}
+          />
 
-          <div className="space-y-12 md:space-y-16">
-            {education.map((item, idx) => {
-              const isEven = idx % 2 === 0;
-
-              return (
-                <motion.div
-                  key={item.id}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: idx * 0.15 }}
-                  className={`relative flex flex-col md:flex-row items-center ${
-                    isEven ? 'md:flex-row-reverse' : ''
+          <div className="space-y-8">
+            {(education || []).map((item) => (
+              <div
+                key={item.id}
+                className="relative sm:pl-12"
+              >
+                {/* Monochrome Square Node */}
+                <div
+                  className={`hidden sm:flex absolute left-0 top-6 w-6 h-6 border items-center justify-center ${
+                    isLight
+                      ? 'bg-white border-zinc-950 text-zinc-950'
+                      : 'bg-zinc-950 border-white text-white'
                   }`}
                 >
-                  {/* Timeline Center Node */}
-                  <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 w-10 h-10 rounded-2xl bg-black border-2 border-orange-500 items-center justify-center shadow-lg shadow-orange-500/30 z-20">
-                    <GraduationCap className="w-5 h-5 text-orange-400" />
+                  <GraduationCap className="w-3.5 h-3.5" />
+                </div>
+
+                {/* Hairline Card */}
+                <div
+                  className={`p-6 sm:p-8 border transition-colors ${
+                    isLight
+                      ? 'bg-white border-zinc-200 hover:border-zinc-950'
+                      : 'bg-zinc-950 border-zinc-800 hover:border-zinc-600'
+                  }`}
+                >
+                  {/* Unboxed Meta Row */}
+                  <div
+                    className={`flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-mono mb-3 ${
+                      isLight ? 'text-zinc-500' : 'text-zinc-400'
+                    }`}
+                  >
+                    <span className={`font-semibold tabular-nums ${isLight ? 'text-zinc-950' : 'text-white'}`}>
+                      {item.startYear} — {item.endYear}
+                    </span>
+                    {item.status && (
+                      <>
+                        <span aria-hidden="true">·</span>
+                        <span className={isLight ? 'text-emerald-700 font-medium' : 'text-emerald-400 font-medium'}>
+                          {item.status}
+                        </span>
+                      </>
+                    )}
                   </div>
 
-                  {/* Left / Right Card Container */}
-                  <div className="w-full md:w-1/2 md:px-8">
-                    <div className="group relative rounded-2xl p-6 sm:p-7 bg-zinc-950 border border-zinc-800 hover:border-orange-500/50 shadow-xl shadow-black/60 transition-all duration-300 hover:translate-y-[-2px]">
-                      
-                      {/* Top Meta Row */}
-                      <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-950/70 border border-orange-500/40 text-orange-300 text-xs font-mono font-semibold">
-                          <Calendar className="w-3 h-3 text-orange-400" />
-                          <span>{item.startYear} — {item.endYear}</span>
-                        </div>
+                  {/* Degree & Institution */}
+                  <h3
+                    className={`text-lg sm:text-xl font-bold tracking-tight ${
+                      isLight ? 'text-zinc-950' : 'text-white'
+                    }`}
+                  >
+                    {item.degree}
+                  </h3>
+                  <p
+                    className={`text-sm font-medium mt-1 ${
+                      isLight ? 'text-zinc-700' : 'text-zinc-300'
+                    }`}
+                  >
+                    {item.institution}
+                  </p>
 
-                        {item.status && (
-                          <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-950/60 border border-emerald-800/50 text-emerald-400">
-                            {item.status}
-                          </span>
-                        )}
-                      </div>
+                  {/* Description */}
+                  <p
+                    className={`mt-3 text-xs sm:text-sm leading-relaxed ${
+                      isLight ? 'text-zinc-600' : 'text-zinc-400'
+                    }`}
+                  >
+                    {item.description}
+                  </p>
 
-                      {/* Degree Title */}
-                      <h3 className="text-lg sm:text-xl font-bold text-white group-hover:text-orange-300 transition-colors">
-                        {item.degree}
-                      </h3>
-
-                      {/* Institution */}
-                      <div className="flex items-center gap-2 text-sm text-zinc-300 mt-1 font-medium">
-                        <Building className="w-4 h-4 text-orange-400 shrink-0" />
-                        <span>{item.institution}</span>
-                      </div>
-
-                      {/* Description */}
-                      <p className="mt-3 text-xs sm:text-sm text-zinc-400 leading-relaxed">
-                        {item.description}
-                      </p>
-
-                      {/* Certificate or Verification link */}
-                      {item.certificateLink && item.certificateLink !== '#' && (
-                        <div className="mt-4 pt-3 border-t border-zinc-800">
-                          <a
-                            href={item.certificateLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 text-xs text-orange-400 hover:text-orange-300 font-semibold transition-colors"
-                          >
-                            <Award className="w-3.5 h-3.5" />
-                            <span>View Academic Record / Certificate</span>
-                            <ExternalLink className="w-3 h-3" />
-                          </a>
-                        </div>
-                      )}
+                  {/* Certificate Link if present */}
+                  {item.certificateLink && item.certificateLink !== '#' && (
+                    <div className={`mt-4 pt-3 border-t ${isLight ? 'border-zinc-200' : 'border-zinc-800'}`}>
+                      <a
+                        href={item.certificateLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`inline-flex items-center gap-1.5 text-xs font-mono font-semibold underline-offset-4 hover:underline ${
+                          isLight ? 'text-zinc-950' : 'text-white'
+                        }`}
+                      >
+                        <span>View Academic Record / Certificate</span>
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
                     </div>
-                  </div>
-                </motion.div>
-              );
-            })}
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
-
       </div>
     </section>
   );
