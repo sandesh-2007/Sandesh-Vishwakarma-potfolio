@@ -89,17 +89,19 @@ export const CertificationCard: React.FC<CertificationCardProps> = ({
           </div>
 
           <div
-            className={`w-8 h-8 border flex items-center justify-center shrink-0 ${
+            className={`w-9 h-9 border flex items-center justify-center shrink-0 p-1 ${
               isLight
-                ? 'bg-zinc-50 border-zinc-200 text-zinc-950'
-                : 'bg-zinc-900 border-zinc-800 text-white'
+                ? 'bg-zinc-50 border-zinc-200'
+                : 'bg-zinc-900 border-zinc-800'
             }`}
           >
-            {pdfSource && !cert.imageUrl ? (
-              <FileText className="w-4 h-4" />
-            ) : (
-              <Award className="w-4 h-4" />
-            )}
+            <img
+              src="/assets/aistudio/image_354b4a27.png"
+              alt="Certification Award Badge"
+              loading="lazy"
+              decoding="async"
+              className="w-full h-full object-contain select-none"
+            />
           </div>
         </div>
 

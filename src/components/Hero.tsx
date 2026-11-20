@@ -2,20 +2,20 @@ import React, { useState } from 'react';
 import { usePortfolio } from '../context/PortfolioContext';
 import { UploadProfileModal } from './UploadProfileModal';
 import { PixelDisintegrationHeading } from './PixelDisintegrationHeading';
+import { BrandLogo } from './BrandLogo';
 import {
   ArrowRight,
   ArrowUpRight,
-  Mail,
   FileDown,
   Camera,
   Upload,
-  Linkedin,
-  Instagram,
-  Github,
-  Terminal,
   FolderGit2,
   X,
-  Image as ImageIcon
+  Image as ImageIcon,
+  ChevronDown,
+  ChevronUp,
+  MapPin,
+  Briefcase
 } from 'lucide-react';
 
 interface HeroProps {
@@ -44,9 +44,11 @@ export const Hero: React.FC<HeroProps> = ({
   const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
   const [uploadingSlot, setUploadingSlot] = useState<'left' | null>(null);
   const [lightboxPhoto, setLightboxPhoto] = useState<{ url: string; label: string } | null>(null);
+  const [showFullAbout, setShowFullAbout] = useState(false);
 
   const featuredShowcase = (projects || []).slice(0, 4);
   const leftHeroPhoto = profile.heroLeftPhoto || '';
+  const aboutParagraphs = (profile.aboutLong || []).filter((p) => p && p.trim().length > 0);
 
   const handleBoxFileChange = async (
     target: 'left',
@@ -238,14 +240,45 @@ export const Hero: React.FC<HeroProps> = ({
               isLight ? 'border-zinc-200' : 'border-zinc-800'
             }`}
           >
-            <div className="py-8 sm:py-10 lg:pr-10 space-y-6">
+            <div id="about" className="py-8 sm:py-10 lg:pr-10 space-y-5 scroll-mt-20">
+              {/* Proper About Section Header */}
+              <div
+                className={`pb-4 border-b flex items-end justify-between gap-4 ${
+                  isLight ? 'border-zinc-200' : 'border-zinc-800'
+                }`}
+              >
+                <div>
+                  <p
+                    className={`text-[11px] font-mono uppercase tracking-wider mb-1 ${
+                      isLight ? 'text-zinc-500' : 'text-zinc-400'
+                    }`}
+                  >
+                    01 · About Me
+                  </p>
+                  <h2
+                    className={`font-display text-2xl sm:text-3xl font-extrabold tracking-tight ${
+                      isLight ? 'text-zinc-950' : 'text-white'
+                    }`}
+                  >
+                    About
+                  </h2>
+                </div>
+                <span
+                  className={`text-[11px] font-mono uppercase tracking-wider ${
+                    isLight ? 'text-zinc-500' : 'text-zinc-400'
+                  }`}
+                >
+                  {profile.headline}
+                </span>
+              </div>
+
               {/* Profile Quick Identity Strip */}
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3.5">
                 <div
                   onClick={() => {
                     if (isAdmin) setProfileUploadOpen(true);
                   }}
-                  className={`relative w-14 h-14 overflow-hidden border shrink-0 ${
+                  className={`relative w-12 h-12 overflow-hidden border shrink-0 ${
                     isLight ? 'border-zinc-300 bg-zinc-100' : 'border-zinc-700 bg-zinc-900'
                   } ${isAdmin ? 'cursor-pointer group' : ''}`}
                   title={isAdmin ? 'Click to upload/change photo' : profile.name}
@@ -279,14 +312,91 @@ export const Hero: React.FC<HeroProps> = ({
                 </div>
               </div>
 
-              {/* Short Bio */}
-              <p
-                className={`text-base sm:text-lg leading-relaxed ${
-                  isLight ? 'text-zinc-700' : 'text-zinc-300'
+              {/* About Bio & Detailed Narrative */}
+              <div className="space-y-3">
+                <p
+                  className={`text-sm sm:text-base font-medium leading-relaxed ${
+                    isLight ? 'text-zinc-900' : 'text-zinc-100'
+                  }`}
+                >
+                  {profile.shortBio}
+                </p>
+
+                {aboutParagraphs.length > 0 && (
+                  <div className="space-y-2.5">
+                    {(showFullAbout ? aboutParagraphs : aboutParagraphs.slice(0, 1)).map(
+                      (paragraph, idx) => (
+                        <p
+                          key={idx}
+                          className={`text-xs sm:text-sm leading-relaxed ${
+                            isLight ? 'text-zinc-600' : 'text-zinc-400'
+                          }`}
+                        >
+                          {paragraph}
+                        </p>
+                      )
+                    )}
+
+                    {aboutParagraphs.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => setShowFullAbout((prev) => !prev)}
+                        className={`inline-flex items-center gap-1.5 text-[11px] font-mono font-semibold uppercase tracking-wider transition-colors ${
+                          isLight
+                            ? 'text-zinc-950 hover:text-zinc-600'
+                            : 'text-white hover:text-zinc-300'
+                        }`}
+                      >
+                        <span>{showFullAbout ? 'Show Less' : 'Read More About Me'}</span>
+                        {showFullAbout ? (
+                          <ChevronUp className="w-3.5 h-3.5" />
+                        ) : (
+                          <ChevronDown className="w-3.5 h-3.5" />
+                        )}
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Monochrome Key Details Grid */}
+              <div
+                className={`grid grid-cols-1 sm:grid-cols-2 border ${
+                  isLight ? 'border-zinc-200 bg-zinc-50/50' : 'border-zinc-800 bg-zinc-900/30'
                 }`}
               >
-                {profile.shortBio}
-              </p>
+                <div
+                  className={`p-3 border-b sm:border-b-0 sm:border-r ${
+                    isLight ? 'border-zinc-200' : 'border-zinc-800'
+                  }`}
+                >
+                  <div
+                    className={`flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-wider ${
+                      isLight ? 'text-zinc-500' : 'text-zinc-400'
+                    }`}
+                  >
+                    <MapPin className="w-3 h-3" />
+                    <span>Location</span>
+                  </div>
+                  <p className={`mt-1 text-xs font-semibold truncate ${isLight ? 'text-zinc-950' : 'text-white'}`}>
+                    {profile.location}
+                  </p>
+                </div>
+
+                <div className="p-3">
+                  <div
+                    className={`flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-wider ${
+                      isLight ? 'text-zinc-500' : 'text-zinc-400'
+                    }`}
+                  >
+                    <Briefcase className="w-3 h-3" />
+                    <span>Focus Areas</span>
+                  </div>
+                  <p className={`mt-1 text-xs font-semibold truncate ${isLight ? 'text-zinc-950' : 'text-white'}`}>
+                    {profile.tagline}
+                  </p>
+                </div>
+              </div>
 
               {/* Primary & Secondary CTAs */}
               <div className="flex flex-wrap items-center gap-3">
@@ -312,7 +422,7 @@ export const Hero: React.FC<HeroProps> = ({
                       : 'bg-zinc-950 border-zinc-700 text-white hover:border-white hover:bg-zinc-900'
                   }`}
                 >
-                  <Mail className="w-4 h-4" />
+                  <BrandLogo name="mail" className="w-4 h-4" />
                   <span>Contact Me</span>
                 </a>
 
@@ -356,54 +466,54 @@ export const Hero: React.FC<HeroProps> = ({
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="GitHub Profile"
-                  className={`p-2 border transition-colors ${
+                  className={`p-2 border transition-colors inline-flex items-center justify-center ${
                     isLight
-                      ? 'border-zinc-200 bg-white text-zinc-700 hover:text-zinc-950 hover:border-zinc-950'
-                      : 'border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-white hover:border-white'
+                      ? 'border-zinc-200 bg-white hover:border-zinc-950'
+                      : 'border-zinc-800 bg-zinc-950 hover:border-white'
                   }`}
                   title="GitHub"
                 >
-                  <Github className="w-4 h-4" />
+                  <BrandLogo name="github" isDark={!isLight} className="w-4 h-4" />
                 </a>
                 <a
                   href={profile.socials.linkedin}
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="LinkedIn Profile"
-                  className={`p-2 border transition-colors ${
+                  className={`p-2 border transition-colors inline-flex items-center justify-center ${
                     isLight
-                      ? 'border-zinc-200 bg-white text-zinc-700 hover:text-zinc-950 hover:border-zinc-950'
-                      : 'border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-white hover:border-white'
+                      ? 'border-zinc-200 bg-white hover:border-zinc-950'
+                      : 'border-zinc-800 bg-zinc-950 hover:border-white'
                   }`}
                   title="LinkedIn"
                 >
-                  <Linkedin className="w-4 h-4" />
+                  <BrandLogo name="linkedin" className="w-4 h-4" />
                 </a>
                 <a
                   href={profile.socials.instagram}
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Instagram Profile"
-                  className={`p-2 border transition-colors ${
+                  className={`p-2 border transition-colors inline-flex items-center justify-center ${
                     isLight
-                      ? 'border-zinc-200 bg-white text-zinc-700 hover:text-zinc-950 hover:border-zinc-950'
-                      : 'border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-white hover:border-white'
+                      ? 'border-zinc-200 bg-white hover:border-zinc-950'
+                      : 'border-zinc-800 bg-zinc-950 hover:border-white'
                   }`}
                   title="Instagram"
                 >
-                  <Instagram className="w-4 h-4" />
+                  <BrandLogo name="instagram" className="w-4 h-4" />
                 </a>
                 <a
                   href={`mailto:${profile.email}`}
                   aria-label="Direct Email"
-                  className={`p-2 border transition-colors ${
+                  className={`p-2 border transition-colors inline-flex items-center justify-center ${
                     isLight
-                      ? 'border-zinc-200 bg-white text-zinc-700 hover:text-zinc-950 hover:border-zinc-950'
-                      : 'border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-white hover:border-white'
+                      ? 'border-zinc-200 bg-white hover:border-zinc-950'
+                      : 'border-zinc-800 bg-zinc-950 hover:border-white'
                   }`}
                   title={`Email: ${profile.email}`}
                 >
-                  <Mail className="w-4 h-4" />
+                  <BrandLogo name="mail" className="w-4 h-4" />
                 </a>
               </div>
             </div>
@@ -464,48 +574,11 @@ export const Hero: React.FC<HeroProps> = ({
             </div>
           </div>
 
-          {/* Right Column: 2x2 Featured Projects Grid + Developer Station Bar */}
-          <div className="lg:col-span-7 flex flex-col">
-            {/* Slim Monochrome Developer Station Header */}
-            <div
-              className={`px-4 sm:px-6 py-3 border-b flex items-center justify-between gap-4 ${
-                isLight ? 'border-zinc-200 bg-zinc-50' : 'border-zinc-800 bg-zinc-900/50'
-              }`}
-            >
-              <div className="flex items-center gap-2 text-xs font-mono">
-                <Terminal className="w-3.5 h-3.5" />
-                <span className={isLight ? 'text-zinc-700 font-semibold' : 'text-zinc-300 font-semibold'}>
-                  sandesh@dev-station:~
-                </span>
-                <span className={isLight ? 'text-zinc-400' : 'text-zinc-600'}>/</span>
-                <span className={isLight ? 'text-zinc-500' : 'text-zinc-400'}>
-                  featured-builds
-                </span>
-              </div>
-
-              {isGiftVisible && onOpenSurpriseModal && (
-                <button
-                  id="hero-mystery-gift-icon-btn"
-                  type="button"
-                  onClick={onOpenSurpriseModal}
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-mono font-semibold border transition-colors ${
-                    isLight
-                      ? 'bg-white border-zinc-300 text-zinc-900 hover:bg-zinc-950 hover:text-white hover:border-zinc-950'
-                      : 'bg-zinc-950 border-zinc-700 text-zinc-200 hover:bg-white hover:text-zinc-950 hover:border-white'
-                  }`}
-                  title="Open System Terminal"
-                >
-                  <Terminal className="w-3 h-3" />
-                  <span>Terminal</span>
-                </button>
-              )}
-            </div>
-
-            {/* 2x2 Architectural Featured Projects Matrix */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 flex-1">
+          {/* Right Column: 2x2 Featured Projects Grid */}
+          <div className="lg:col-span-7 flex flex-col justify-center">
+            {/* 2x2 Compact Featured Projects Matrix */}
+            <div className="p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-3.5">
               {featuredShowcase.map((proj, index) => {
-                const isTopRow = index < 2;
-                const isLeftCol = index % 2 === 0;
                 const hasValidLive = proj.liveDemoLink && proj.liveDemoLink !== '#';
                 const targetUrl = hasValidLive
                   ? proj.liveDemoLink
@@ -517,19 +590,17 @@ export const Hero: React.FC<HeroProps> = ({
                 return (
                   <div
                     key={proj.id}
-                    className={`p-5 sm:p-6 flex flex-col justify-between gap-4 transition-colors ${
+                    className={`hero-project-card-tl p-3.5 sm:p-4 border overflow-hidden flex flex-col justify-between gap-2.5 transition-colors ${
                       isLight
-                        ? 'hover:bg-zinc-50/80 border-zinc-200'
-                        : 'hover:bg-zinc-900/40 border-zinc-800'
-                    } ${isTopRow ? 'border-b' : 'border-b sm:border-b-0'} ${
-                      isLeftCol ? 'sm:border-r' : ''
-                    } ${index === 2 ? 'border-b sm:border-b-0' : ''}`}
+                        ? 'bg-white border-zinc-200 hover:bg-zinc-50/80 hover:border-zinc-950'
+                        : 'bg-zinc-950 border-zinc-800 hover:bg-zinc-900/50 hover:border-zinc-500'
+                    }`}
                   >
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                       {/* Thumbnail + Header Row */}
-                      <div className="flex items-start gap-3.5">
+                      <div className="flex items-start gap-2.5">
                         <div
-                          className={`w-16 h-16 shrink-0 border overflow-hidden flex items-center justify-center ${
+                          className={`hero-project-thumb-tl w-12 h-12 shrink-0 border overflow-hidden flex items-center justify-center ${
                             isLight
                               ? 'border-zinc-200 bg-zinc-100'
                               : 'border-zinc-800 bg-zinc-900'
@@ -546,20 +617,20 @@ export const Hero: React.FC<HeroProps> = ({
                               className="w-full h-full object-cover grayscale-[20%] hover:grayscale-0 transition-all duration-300"
                             />
                           ) : (
-                            <FolderGit2 className={`w-6 h-6 ${isLight ? 'text-zinc-400' : 'text-zinc-600'}`} />
+                            <FolderGit2 className={`w-5 h-5 ${isLight ? 'text-zinc-400' : 'text-zinc-600'}`} />
                           )}
                         </div>
 
                         <div className="min-w-0 flex-1">
                           <span
-                            className={`text-[10px] font-mono uppercase tracking-wider block ${
+                            className={`text-[9.5px] font-mono uppercase tracking-wider block ${
                               isLight ? 'text-zinc-500' : 'text-zinc-400'
                             }`}
                           >
                             0{index + 1} · {proj.category}
                           </span>
                           <h3
-                            className={`text-sm sm:text-base font-bold tracking-tight leading-snug mt-0.5 line-clamp-2 ${
+                            className={`text-xs sm:text-sm font-bold tracking-tight leading-snug mt-0.5 line-clamp-2 ${
                               isLight ? 'text-zinc-950' : 'text-white'
                             }`}
                           >
@@ -570,7 +641,7 @@ export const Hero: React.FC<HeroProps> = ({
 
                       {/* Concise Description */}
                       <p
-                        className={`text-xs leading-relaxed line-clamp-2 ${
+                        className={`text-[11px] leading-relaxed line-clamp-2 ${
                           isLight ? 'text-zinc-600' : 'text-zinc-400'
                         }`}
                       >
@@ -578,11 +649,11 @@ export const Hero: React.FC<HeroProps> = ({
                       </p>
 
                       {/* Crisp Bordered Stack Tags */}
-                      <div className="flex flex-wrap gap-1.5">
+                      <div className="flex flex-wrap gap-1">
                         {proj.technologies.slice(0, 3).map((tech, tIdx) => (
                           <span
                             key={tIdx}
-                            className={`px-2 py-0.5 text-[10px] font-mono uppercase border ${
+                            className={`px-1.5 py-0.5 text-[9.5px] font-mono uppercase border ${
                               isLight
                                 ? 'border-zinc-200 bg-white text-zinc-700'
                                 : 'border-zinc-800 bg-zinc-950 text-zinc-300'
@@ -595,19 +666,19 @@ export const Hero: React.FC<HeroProps> = ({
                     </div>
 
                     {/* Action Link */}
-                    <div className="pt-1">
+                    <div className="pt-0.5">
                       <a
                         href={targetUrl}
                         target={isExternal ? '_blank' : undefined}
                         rel={isExternal ? 'noopener noreferrer' : undefined}
-                        className={`inline-flex items-center gap-1.5 text-[11px] font-mono font-bold uppercase tracking-wider transition-colors ${
+                        className={`inline-flex items-center gap-1 text-[10px] font-mono font-bold uppercase tracking-wider transition-colors ${
                           isLight
                             ? 'text-zinc-950 hover:text-zinc-600'
                             : 'text-white hover:text-zinc-300'
                         }`}
                       >
                         <span>View Project</span>
-                        <ArrowUpRight className="w-3.5 h-3.5" />
+                        <ArrowUpRight className="w-3 h-3" />
                       </a>
                     </div>
                   </div>

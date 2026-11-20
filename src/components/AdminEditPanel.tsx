@@ -19,6 +19,7 @@ import {
   DEFAULT_CERTIFICATIONS_SETTINGS,
   DEFAULT_EXPERIENCE_SETTINGS,
 } from '../data/initialData';
+import { BrandLogo } from './BrandLogo';
 import { 
   X, 
   Save, 
@@ -40,7 +41,6 @@ import {
   Sparkles,
   MessageSquare,
   Globe,
-  FileSpreadsheet,
   ExternalLink,
   ArrowUp,
   ArrowDown,
@@ -542,7 +542,7 @@ export const AdminEditPanel: React.FC = () => {
                 onClick={() => setSheetsModalOpen(true)}
                 className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold text-left text-emerald-400 bg-emerald-950/40 hover:bg-emerald-950/80 border border-emerald-500/40 transition-all shadow-sm group"
               >
-                <FileSpreadsheet className="w-4 h-4 text-emerald-400 shrink-0 group-hover:scale-110 transition-transform" />
+                <BrandLogo name="sheets" className="w-4 h-4 shrink-0 group-hover:scale-110 transition-transform" />
                 <div className="overflow-hidden">
                   <div className="font-semibold text-[11px] truncate">Google Sheets</div>
                   <div className="text-[9px] text-emerald-300/80 font-mono truncate">
@@ -3758,7 +3758,7 @@ export const AdminEditPanel: React.FC = () => {
                       onClick={() => setSheetsModalOpen(true)}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-400 hover:bg-emerald-900/50 text-xs font-semibold font-mono transition-colors"
                     >
-                      <FileSpreadsheet className="w-3.5 h-3.5" />
+                      <BrandLogo name="sheets" className="w-3.5 h-3.5" />
                       <span>{data.sheetsConfig?.spreadsheetId ? 'Sheets Connected' : 'Connect Sheets'}</span>
                     </button>
                     <button
@@ -3774,7 +3774,7 @@ export const AdminEditPanel: React.FC = () => {
                 {data.sheetsConfig?.spreadsheetId && (
                   <div className="p-3 rounded-xl bg-emerald-950/30 border border-emerald-500/30 flex items-center justify-between gap-3 text-xs">
                     <div className="flex items-center gap-2 text-emerald-300">
-                      <FileSpreadsheet className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <BrandLogo name="sheets" className="w-4 h-4 shrink-0" />
                       <span>
                         Syncing to: <strong>{data.sheetsConfig.spreadsheetTitle || 'Google Sheet'}</strong>
                       </span>
@@ -3819,7 +3819,7 @@ export const AdminEditPanel: React.FC = () => {
                             <span className="font-bold text-white text-xs">{m.name}</span>
                             {m.syncedToSheets ? (
                               <span className="inline-flex items-center gap-1 text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-950 border border-emerald-500/30 text-emerald-400">
-                                <FileSpreadsheet className="w-2.5 h-2.5" />
+                                <BrandLogo name="sheets" className="w-3 h-3" />
                                 <span>Synced to Sheets</span>
                               </span>
                             ) : (

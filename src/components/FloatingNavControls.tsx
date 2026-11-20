@@ -76,7 +76,7 @@ export const FloatingNavControls: React.FC<FloatingNavControlsProps> = () => {
   return (
     <aside
       aria-label="Page navigation shortcuts"
-      className="fixed right-4 sm:right-6 bottom-6 z-30 flex flex-col items-end gap-2 pointer-events-none"
+      className="fixed right-4 sm:right-6 top-20 z-30 flex flex-col items-end gap-2 pointer-events-none"
     >
       {!isFooterVisible && (
         <button

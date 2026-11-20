@@ -16,13 +16,14 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenResumeModal }) => {
   const { data, theme, toggleTheme } = usePortfolio();
   const isLight = theme === 'light';
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState('education');
+  const [activeSection, setActiveSection] = useState('about');
 
   useEffect(() => {
     const handleScroll = () => {
       const sections = [
-        'education',
+        'about',
         'projects',
+        'education',
         'experience',
         'certifications',
         'achievements',
@@ -47,6 +48,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenResumeModal }) => {
 
   // Top bar concise single-line links
   const desktopLinks = [
+    { name: 'About', href: '#about' },
     { name: 'Projects', href: '#projects' },
     { name: 'Education', href: '#education' },
     { name: 'Experience', href: '#experience' },
@@ -55,6 +57,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenResumeModal }) => {
 
   // Full mobile drawer directory preserving all sections
   const mobileLinks = [
+    { name: 'About', href: '#about' },
     { name: 'Education', href: '#education' },
     { name: 'Projects', href: '#projects' },
     { name: 'Experience', href: '#experience' },
@@ -68,8 +71,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenResumeModal }) => {
       id="main-navbar"
       className={`fixed top-0 left-0 right-0 z-40 border-b backdrop-blur-md transition-colors duration-200 ${
         isLight
-          ? 'bg-white/95 border-zinc-200 text-zinc-950'
-          : 'bg-zinc-950/95 border-zinc-800 text-white'
+          ? 'bg-white/30 border-zinc-200/70 text-zinc-950'
+          : 'bg-zinc-950/30 border-zinc-800/70 text-white'
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-8">

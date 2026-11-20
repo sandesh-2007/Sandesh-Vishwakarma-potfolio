@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { usePortfolio } from '../context/PortfolioContext';
+import { BrandLogo } from './BrandLogo';
 import { 
   X, 
-  Table, 
   ExternalLink, 
   CheckCircle2, 
   AlertCircle, 
@@ -11,7 +11,6 @@ import {
   Plus, 
   Link as LinkIcon, 
   Trash2, 
-  FileSpreadsheet, 
   Send,
   Database,
   ArrowRight,
@@ -194,8 +193,8 @@ export const GoogleSheetsModal: React.FC = () => {
           {/* Modal Header */}
           <div className="p-6 border-b border-zinc-800 flex items-center justify-between bg-gradient-to-r from-emerald-950/40 via-zinc-950 to-orange-950/20">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shadow-inner">
-                <FileSpreadsheet className="w-5 h-5" />
+              <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center shadow-inner">
+                <BrandLogo name="sheets" className="w-6 h-6" />
               </div>
               <div>
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
@@ -382,7 +381,7 @@ export const GoogleSheetsModal: React.FC = () => {
                           : 'text-zinc-400 hover:text-white'
                       }`}
                     >
-                      <Table className="w-3.5 h-3.5" />
+                      <BrandLogo name="sheets" className="w-4 h-4" />
                       <span>Method 2: Google Apps Script Webhook (Zero Auth)</span>
                     </button>
                   </div>
@@ -488,7 +487,7 @@ export const GoogleSheetsModal: React.FC = () => {
                   <div className="p-5 rounded-2xl bg-zinc-900 border border-zinc-800 space-y-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <Table className="w-4 h-4 text-emerald-400" />
+                        <BrandLogo name="sheets" className="w-4 h-4" />
                         <h4 className="text-sm font-bold text-white">Google Sheet Webhook (Zero Auth)</h4>
                       </div>
                       <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-950 border border-emerald-500/30 text-emerald-400 font-mono">
@@ -576,7 +575,7 @@ export const GoogleSheetsModal: React.FC = () => {
                           Connected Google Spreadsheet
                         </span>
                         <h4 className="text-base font-bold text-white flex items-center gap-2">
-                          <Table className="w-4 h-4 text-emerald-400" />
+                          <BrandLogo name="sheets" className="w-4 h-4" />
                           {sheetsConfig.spreadsheetTitle || (isWebhookConnected ? 'Google Sheet (Webhook Sync)' : 'Sandesh Portfolio - Contact Submissions')}
                         </h4>
                         <p className="text-xs text-zinc-400 font-mono">

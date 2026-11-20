@@ -1,6 +1,6 @@
 import React from 'react';
 import { usePortfolio } from '../context/PortfolioContext';
-import { GraduationCap, ExternalLink } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 
 export const Education: React.FC = () => {
   const { data, theme } = usePortfolio();
@@ -42,7 +42,7 @@ export const Education: React.FC = () => {
         <div className="relative max-w-4xl">
           {/* Left Spine */}
           <div
-            className={`hidden sm:block absolute left-3 top-2 bottom-2 w-px ${
+            className={`hidden sm:block absolute left-4 top-2 bottom-2 w-px ${
               isLight ? 'bg-zinc-200' : 'bg-zinc-800'
             }`}
           />
@@ -51,17 +51,23 @@ export const Education: React.FC = () => {
             {(education || []).map((item) => (
               <div
                 key={item.id}
-                className="relative sm:pl-12"
+                className="relative sm:pl-14"
               >
-                {/* Monochrome Square Node */}
+                {/* Graduation Cap Timeline Node */}
                 <div
-                  className={`hidden sm:flex absolute left-0 top-6 w-6 h-6 border items-center justify-center ${
+                  className={`hidden sm:flex absolute left-0 top-5 w-8 h-8 p-1 border items-center justify-center ${
                     isLight
-                      ? 'bg-white border-zinc-950 text-zinc-950'
-                      : 'bg-zinc-950 border-white text-white'
+                      ? 'bg-white border-zinc-950'
+                      : 'bg-zinc-100 border-zinc-700'
                   }`}
                 >
-                  <GraduationCap className="w-3.5 h-3.5" />
+                  <img
+                    src="/assets/aistudio/image_d362e988.png"
+                    alt="Graduation Cap"
+                    loading="lazy"
+                    decoding="async"
+                    className="w-full h-full object-contain select-none"
+                  />
                 </div>
 
                 {/* Hairline Card */}

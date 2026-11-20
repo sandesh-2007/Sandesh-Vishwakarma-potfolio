@@ -1,14 +1,10 @@
 import React from 'react';
 import { usePortfolio } from '../context/PortfolioContext';
+import { BrandLogo } from './BrandLogo';
 import {
   ArrowUp,
   Lock,
-  Unlock,
-  Github,
-  Linkedin,
-  Instagram,
-  Mail,
-  FileSpreadsheet
+  Unlock
 } from 'lucide-react';
 
 interface FooterProps {
@@ -67,14 +63,14 @@ export const Footer: React.FC<FooterProps> = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="GitHub Profile"
-                className={`p-2 border transition-colors ${
+                className={`p-2 border transition-colors inline-flex items-center justify-center ${
                   isLight
-                    ? 'bg-white border-zinc-200 text-zinc-700 hover:text-zinc-950 hover:border-zinc-950'
-                    : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-white hover:border-white'
+                    ? 'bg-white border-zinc-200 hover:border-zinc-950'
+                    : 'bg-zinc-950 border-zinc-800 hover:border-white'
                 }`}
                 title="GitHub"
               >
-                <Github className="w-4 h-4" />
+                <BrandLogo name="github" isDark={!isLight} className="w-4 h-4" />
               </a>
 
               <a
@@ -82,14 +78,14 @@ export const Footer: React.FC<FooterProps> = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="LinkedIn Profile"
-                className={`p-2 border transition-colors ${
+                className={`p-2 border transition-colors inline-flex items-center justify-center ${
                   isLight
-                    ? 'bg-white border-zinc-200 text-zinc-700 hover:text-zinc-950 hover:border-zinc-950'
-                    : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-white hover:border-white'
+                    ? 'bg-white border-zinc-200 hover:border-zinc-950'
+                    : 'bg-zinc-950 border-zinc-800 hover:border-white'
                 }`}
                 title="LinkedIn"
               >
-                <Linkedin className="w-4 h-4" />
+                <BrandLogo name="linkedin" className="w-4 h-4" />
               </a>
 
               <a
@@ -97,27 +93,27 @@ export const Footer: React.FC<FooterProps> = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Instagram Profile"
-                className={`p-2 border transition-colors ${
+                className={`p-2 border transition-colors inline-flex items-center justify-center ${
                   isLight
-                    ? 'bg-white border-zinc-200 text-zinc-700 hover:text-zinc-950 hover:border-zinc-950'
-                    : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-white hover:border-white'
+                    ? 'bg-white border-zinc-200 hover:border-zinc-950'
+                    : 'bg-zinc-950 border-zinc-800 hover:border-white'
                 }`}
                 title="Instagram"
               >
-                <Instagram className="w-4 h-4" />
+                <BrandLogo name="instagram" className="w-4 h-4" />
               </a>
 
               <a
                 href={`mailto:${profile.email}`}
                 aria-label="Direct Email"
-                className={`p-2 border transition-colors ${
+                className={`p-2 border transition-colors inline-flex items-center justify-center ${
                   isLight
-                    ? 'bg-white border-zinc-200 text-zinc-700 hover:text-zinc-950 hover:border-zinc-950'
-                    : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-white hover:border-white'
+                    ? 'bg-white border-zinc-200 hover:border-zinc-950'
+                    : 'bg-zinc-950 border-zinc-800 hover:border-white'
                 }`}
                 title="Email"
               >
-                <Mail className="w-4 h-4" />
+                <BrandLogo name="mail" className="w-4 h-4" />
               </a>
             </div>
           </div>
@@ -144,25 +140,25 @@ export const Footer: React.FC<FooterProps> = () => {
             <ul className="space-y-2">
               <li>
                 <a href={profile.socials.github} target="_blank" rel="noopener noreferrer" className={`flex items-center gap-2 transition-colors ${isLight ? 'hover:text-zinc-950' : 'hover:text-white'}`}>
-                  <Github className="w-3.5 h-3.5" />
+                  <BrandLogo name="github" isDark={!isLight} className="w-3.5 h-3.5" />
                   <span>GitHub Repositories</span>
                 </a>
               </li>
               <li>
                 <a href={profile.socials.linkedin} target="_blank" rel="noopener noreferrer" className={`flex items-center gap-2 transition-colors ${isLight ? 'hover:text-zinc-950' : 'hover:text-white'}`}>
-                  <Linkedin className="w-3.5 h-3.5" />
+                  <BrandLogo name="linkedin" className="w-3.5 h-3.5" />
                   <span>LinkedIn Network</span>
                 </a>
               </li>
               <li>
                 <a href={profile.socials.instagram} target="_blank" rel="noopener noreferrer" className={`flex items-center gap-2 transition-colors ${isLight ? 'hover:text-zinc-950' : 'hover:text-white'}`}>
-                  <Instagram className="w-3.5 h-3.5" />
+                  <BrandLogo name="instagram" className="w-3.5 h-3.5" />
                   <span>Instagram</span>
                 </a>
               </li>
               <li>
                 <a href={`mailto:${profile.email}`} className={`flex items-center gap-2 transition-colors ${isLight ? 'hover:text-zinc-950' : 'hover:text-white'}`}>
-                  <Mail className="w-3.5 h-3.5" />
+                  <BrandLogo name="mail" className="w-3.5 h-3.5" />
                   <span className="truncate">{profile.email}</span>
                 </a>
               </li>
@@ -177,7 +173,7 @@ export const Footer: React.FC<FooterProps> = () => {
                         : 'bg-zinc-900 border-zinc-700 text-white hover:border-white'
                     }`}
                   >
-                    <FileSpreadsheet className="w-3.5 h-3.5" />
+                    <BrandLogo name="sheets" className="w-3.5 h-3.5" />
                     <span>{isSheetConnected ? 'Google Sheets (Connected)' : 'Configure Google Sheets'}</span>
                   </button>
                 )}

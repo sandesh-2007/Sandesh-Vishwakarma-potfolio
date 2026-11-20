@@ -1,15 +1,11 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { usePortfolio } from '../context/PortfolioContext';
+import { BrandLogo, BrandLogoName } from './BrandLogo';
 import {
-  Mail,
   Send,
   ArrowUpRight,
   CheckCircle2,
-  Github,
-  Linkedin,
-  Instagram,
-  FileSpreadsheet,
   Settings
 } from 'lucide-react';
 
@@ -46,33 +42,39 @@ export const Contact: React.FC = () => {
     }
   };
 
-  const socialCards = [
+  const socialCards: Array<{
+    name: string;
+    value: string;
+    href: string;
+    logo: BrandLogoName;
+    external: boolean;
+  }> = [
     {
       name: 'Email Address',
       value: profile.email,
       href: `mailto:${profile.email}`,
-      icon: Mail,
+      logo: 'mail',
       external: false
     },
     {
       name: 'GitHub',
       value: 'Repositories & Code Projects',
       href: profile.socials.github,
-      icon: Github,
+      logo: 'github',
       external: true
     },
     {
       name: 'LinkedIn',
       value: 'Professional Network & Experience',
       href: profile.socials.linkedin,
-      icon: Linkedin,
+      logo: 'linkedin',
       external: true
     },
     {
       name: 'Instagram',
       value: 'Design, Creative Works & Updates',
       href: profile.socials.instagram,
-      icon: Instagram,
+      logo: 'instagram',
       external: true
     }
   ];
@@ -143,13 +145,13 @@ export const Contact: React.FC = () => {
                 >
                   <div className="flex items-center gap-3.5 min-w-0">
                     <div
-                      className={`p-2.5 border shrink-0 ${
+                      className={`p-2 border shrink-0 flex items-center justify-center ${
                         isLight
-                          ? 'bg-zinc-50 border-zinc-200 text-zinc-950'
-                          : 'bg-zinc-900 border-zinc-800 text-white'
+                          ? 'bg-zinc-50 border-zinc-200'
+                          : 'bg-zinc-900 border-zinc-800'
                       }`}
                     >
-                      <item.icon className="w-4 h-4" />
+                      <BrandLogo name={item.logo} isDark={!isLight} className="w-5 h-5" />
                     </div>
                     <div className="min-w-0">
                       <div className={`text-[11px] font-mono ${isLight ? 'text-zinc-500' : 'text-zinc-400'}`}>
@@ -175,11 +177,11 @@ export const Contact: React.FC = () => {
                   <div
                     className={`w-9 h-9 border flex items-center justify-center shrink-0 ${
                       isLight
-                        ? 'bg-zinc-50 border-zinc-200 text-zinc-950'
-                        : 'bg-zinc-900 border-zinc-800 text-white'
+                        ? 'bg-zinc-50 border-zinc-200'
+                        : 'bg-zinc-900 border-zinc-800'
                     }`}
                   >
-                    <FileSpreadsheet className="w-4 h-4" />
+                    <BrandLogo name="sheets" className="w-5 h-5" />
                   </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 text-xs font-mono">
@@ -239,7 +241,7 @@ export const Contact: React.FC = () => {
                         : 'text-emerald-400 bg-emerald-950/40 border-emerald-800 hover:bg-emerald-950/70'
                     }`}
                   >
-                    <FileSpreadsheet className="w-3 h-3" />
+                    <BrandLogo name="sheets" className="w-3.5 h-3.5" />
                     <span>Sheets Linked (Admin)</span>
                   </button>
                 )}
@@ -270,7 +272,7 @@ export const Contact: React.FC = () => {
                   </p>
                   {lastSyncResult && (
                     <div className="inline-flex items-center gap-1.5 px-3 py-1 border border-emerald-500/40 text-xs font-mono">
-                      <FileSpreadsheet className="w-3.5 h-3.5" />
+                      <BrandLogo name="sheets" className="w-4 h-4" />
                       <span>Details saved into Google Sheet row.</span>
                     </div>
                   )}

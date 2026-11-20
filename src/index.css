@@ -14,6 +14,28 @@ span.w-2\.5.h-2\.5.rounded-full {
   border-radius: 9999px !important;
 }
 
+/* Rounded top-left & bottom-right diagonal corners for Project Cards */
+#projects article.project-card-rounded-br {
+  border-top-left-radius: 28px !important;
+  border-bottom-right-radius: 28px !important;
+}
+#projects article.project-card-rounded-br > div:first-child > button:first-child,
+#projects article.project-card-rounded-br > div:first-child > button:first-child img {
+  border-top-left-radius: 27px !important;
+}
+#projects article.project-card-rounded-br > div:last-child {
+  border-bottom-right-radius: 27px !important;
+}
+
+/* Rounded top-left corner for Hero Featured Project Cards */
+#top .hero-project-card-tl {
+  border-top-left-radius: 24px !important;
+}
+#top .hero-project-card-tl .hero-project-thumb-tl,
+#top .hero-project-card-tl .hero-project-thumb-tl img {
+  border-top-left-radius: 14px !important;
+}
+
 @layer base {
   :root {
     color-scheme: light;

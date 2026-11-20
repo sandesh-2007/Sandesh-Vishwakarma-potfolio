@@ -1,6 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { PortfolioData, ContactMessage, CertificationItem, OtherSkillItem, GoogleSheetsConfig } from '../types';
-import { DEFAULT_CERTIFICATIONS_SETTINGS, DEFAULT_EXPERIENCE_SETTINGS, initialPortfolioData } from '../data/initialData';
+import {
+  DEFAULT_CERTIFICATIONS_SETTINGS,
+  DEFAULT_EXPERIENCE_SETTINGS,
+  initialPortfolioData
+} from '../data/initialData';
 import { User } from 'firebase/auth';
 import { 
   googleSignIn, 
@@ -149,12 +153,17 @@ function normalizeSkillsPortfolioData(raw: PortfolioData): PortfolioData {
     typeof rawCollage[idx] === 'string' ? rawCollage[idx] : ''
   );
 
+  const { cursorSwarmSettings: _removedCursorSwarm, ...cleanRaw } = raw as PortfolioData & {
+    cursorSwarmSettings?: unknown;
+  };
+  void _removedCursorSwarm;
+
   return {
-    ...raw,
+    ...cleanRaw,
     profile: {
-      ...raw.profile,
-      heroLeftPhoto: raw.profile?.heroLeftPhoto || '',
-      heroRightPhoto: raw.profile?.heroRightPhoto || normalizedCollage[0] || '',
+      ...cleanRaw.profile,
+      heroLeftPhoto: cleanRaw.profile?.heroLeftPhoto || '',
+      heroRightPhoto: cleanRaw.profile?.heroRightPhoto || normalizedCollage[0] || '',
       heroCollagePhotos: normalizedCollage,
     },
     skillsOrbitV2: true,
@@ -163,12 +172,12 @@ function normalizeSkillsPortfolioData(raw: PortfolioData): PortfolioData {
     experience: normalizedExperience,
     experienceSettings: {
       ...DEFAULT_EXPERIENCE_SETTINGS,
-      ...(raw.experienceSettings || {}),
+      ...(cleanRaw.experienceSettings || {}),
     },
     certifications: normalizedCertifications,
     certificationsSettings: {
       ...DEFAULT_CERTIFICATIONS_SETTINGS,
-      ...(raw.certificationsSettings || {}),
+      ...(cleanRaw.certificationsSettings || {}),
     },
   };
 }
@@ -198,7 +207,13 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({ children 
             parsed.profile.email = initialPortfolioData.profile.email;
           }
         }
-        return normalizeSkillsPortfolioData(parsed);
+        const normalized = normalizeSkillsPortfolioData(parsed);
+        if ('cursorSwarmSettings' in parsed) {
+          try {
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(normalized));
+          } catch {}
+        }
+        return normalized;
       }
     } catch (e) {
       console.warn('Error reading local portfolio data:', e);

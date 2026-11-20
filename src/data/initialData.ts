@@ -547,5 +547,5 @@ export const initialPortfolioData: PortfolioData = {
       description: 'Mastered computerized ledger workflows, MS-CIT digital productivity suites, and Tally Prime GST compliance modules.',
       highlightBadge: 'Applied Skills'
     }
-  ]
+  ],
 };
