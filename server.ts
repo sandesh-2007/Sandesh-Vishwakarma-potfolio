@@ -594,7 +594,12 @@ app.get('/api/messages', requireAuth, (req, res) => {
 });
 
 // File / Image Upload endpoint (Protected: Admin only)
-app.post('/api/upload', requireAuth, (req, res) => {
+app.options('/api/upload', (_req, res) => {
+  res.setHeader('Allow', 'POST, PUT, OPTIONS');
+  return res.sendStatus(204);
+});
+
+const handleFileUploadRoute = (req: express.Request, res: express.Response) => {
   try {
     const { fileData, fileName } = req.body;
     if (!fileData || typeof fileData !== 'string' || !fileName) {
@@ -644,7 +649,10 @@ app.post('/api/upload', requireAuth, (req, res) => {
     console.error('Upload failed:', err);
     return res.status(500).json({ error: 'File upload processing failed' });
   }
-});
+};
+
+app.post('/api/upload', requireAuth, handleFileUploadRoute);
+app.put('/api/upload', requireAuth, handleFileUploadRoute);
 
 // Vite Middleware & SPA serving
 async function startServer() {

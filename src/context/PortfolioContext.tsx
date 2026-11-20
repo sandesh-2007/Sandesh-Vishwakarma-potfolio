@@ -20,6 +20,10 @@ import {
   batchAppendMessagesToSheet, 
   extractSpreadsheetId 
 } from '../services/googleSheets';
+import {
+  isStaticUploadUnavailable,
+  optimizeDataUrlForLocalStorage,
+} from '../utils/uploadFallback';
 
 interface Toast {
   id: string;
@@ -679,8 +683,17 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({ children 
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = async () => {
+        const base64 = reader.result as string;
+        const resolveWithLocalFallback = async () => {
+          const optimized = await optimizeDataUrlForLocalStorage(base64, file.type);
+          resolve({
+            success: true,
+            url: optimized,
+            fileName: file.name,
+          });
+        };
+
         try {
-          const base64 = reader.result as string;
           const res = await fetch('/api/upload', {
             method: 'POST',
             headers: {
@@ -712,9 +725,15 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({ children 
             });
             return;
           }
-          const json = await res.json().catch(() => ({}));
-          if (res.ok && json.fileUrl) {
+          if (isStaticUploadUnavailable(res)) {
+            await resolveWithLocalFallback();
+            return;
+          }
+          const json = await res.json().catch(() => null);
+          if (res.ok && json?.fileUrl) {
             resolve({ success: true, url: json.fileUrl, fileName: json.fileName || file.name });
+          } else if (!json) {
+            await resolveWithLocalFallback();
           } else {
             resolve({
               success: false,
@@ -724,12 +743,7 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({ children 
             });
           }
         } catch (e) {
-          resolve({
-            success: false,
-            url: '',
-            fileName: '',
-            error: 'Could not reach persistent file storage endpoint'
-          });
+          await resolveWithLocalFallback();
         }
       };
       reader.onerror = () => {

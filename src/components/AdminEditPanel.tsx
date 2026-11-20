@@ -57,6 +57,10 @@ import { SkillIcon, SKILL_ICON_PRESETS } from './SkillIcon';
 import { ExperienceCard } from './ExperienceCard';
 import { LogoCropUploadModal } from './LogoCropUploadModal';
 import { CertificationCard } from './CertificationCard';
+import {
+  isStaticUploadUnavailable,
+  optimizeDataUrlForLocalStorage,
+} from '../utils/uploadFallback';
 
 export const AdminEditPanel: React.FC = () => {
   const { 
@@ -178,13 +182,18 @@ export const AdminEditPanel: React.FC = () => {
 
   if (!editModalOpen || !isAdmin) return null;
 
-  // Strict persistent file upload helper (stores on server /uploads/..., never stores base64/blob)
+  // Persistent file upload helper (uses Express /api/upload when available, falls back cleanly on static hosts)
   const uploadFilePersistently = (file: File): Promise<string | null> => {
     setIsUploading(true);
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = async () => {
         const base64Data = reader.result as string;
+        const fallbackLocally = async () => {
+          const optimized = await optimizeDataUrlForLocalStorage(base64Data, file.type);
+          showToast('File saved locally in browser storage!', 'success');
+          resolve(optimized);
+        };
         try {
           const res = await fetch('/api/upload', {
             method: 'POST',
@@ -210,17 +219,22 @@ export const AdminEditPanel: React.FC = () => {
             resolve(null);
             return;
           }
-          const json = await res.json().catch(() => ({}));
-          if (res.ok && json.fileUrl) {
+          if (isStaticUploadUnavailable(res)) {
+            await fallbackLocally();
+            return;
+          }
+          const json = await res.json().catch(() => null);
+          if (res.ok && json?.fileUrl) {
             showToast('File uploaded to persistent storage!', 'success');
             resolve(json.fileUrl as string);
+          } else if (!json) {
+            await fallbackLocally();
           } else {
             showToast(json?.error || `Server upload failed (HTTP ${res.status}).`, 'error');
             resolve(null);
           }
         } catch (err) {
-          showToast('Could not reach upload storage endpoint.', 'error');
-          resolve(null);
+          await fallbackLocally();
         } finally {
           setIsUploading(false);
         }
@@ -241,6 +255,11 @@ export const AdminEditPanel: React.FC = () => {
     fileType: string
   ): Promise<string | null> => {
     setIsUploading(true);
+    const fallbackLocally = async () => {
+      const optimized = await optimizeDataUrlForLocalStorage(base64Data, fileType);
+      showToast('Image saved locally in browser storage!', 'success');
+      return optimized;
+    };
     try {
       const res = await fetch('/api/upload', {
         method: 'POST',
@@ -264,16 +283,21 @@ export const AdminEditPanel: React.FC = () => {
         showToast('Image is too large to upload (max 35MB).', 'error');
         return null;
       }
-      const json = await res.json().catch(() => ({}));
-      if (res.ok && json.fileUrl) {
+      if (isStaticUploadUnavailable(res)) {
+        return await fallbackLocally();
+      }
+      const json = await res.json().catch(() => null);
+      if (res.ok && json?.fileUrl) {
         showToast('Image uploaded and stored persistently!', 'success');
         return json.fileUrl as string;
       }
-      showToast(json?.error || 'Server upload failed. Please try again.', 'error');
+      if (!json) {
+        return await fallbackLocally();
+      }
+      showToast(json?.error || `Server upload failed (HTTP ${res.status}).`, 'error');
       return null;
     } catch (e) {
-      showToast('Could not reach upload storage endpoint.', 'error');
-      return null;
+      return await fallbackLocally();
     } finally {
       setIsUploading(false);
     }
@@ -286,6 +310,11 @@ export const AdminEditPanel: React.FC = () => {
       const reader = new FileReader();
       reader.onload = async () => {
         const base64Data = reader.result as string;
+        const fallbackLocally = async () => {
+          const optimized = await optimizeDataUrlForLocalStorage(base64Data, file.type);
+          callback(optimized);
+          showToast('File stored locally in browser!', 'success');
+        };
         try {
           const res = await fetch('/api/upload', {
             method: 'POST',
@@ -309,18 +338,21 @@ export const AdminEditPanel: React.FC = () => {
             showToast('File is too large to upload (max 35MB).', 'error');
             return;
           }
-          const json = await res.json().catch(() => ({}));
-          if (res.ok && json.fileUrl) {
+          if (isStaticUploadUnavailable(res)) {
+            await fallbackLocally();
+            return;
+          }
+          const json = await res.json().catch(() => null);
+          if (res.ok && json?.fileUrl) {
             callback(json.fileUrl);
             showToast('File uploaded successfully!', 'success');
-          } else if (res.status === 404) {
-            callback(base64Data);
-            showToast('File stored locally in browser!', 'info');
+          } else if (!json) {
+            await fallbackLocally();
           } else {
             showToast(json?.error || `Upload failed (HTTP ${res.status}).`, 'error');
           }
         } catch (e) {
-          showToast('Upload endpoint unreachable. Please try again.', 'error');
+          await fallbackLocally();
         } finally {
           setIsUploading(false);
         }
