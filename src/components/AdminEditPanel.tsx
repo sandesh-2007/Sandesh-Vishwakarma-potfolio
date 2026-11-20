@@ -158,6 +158,7 @@ export const AdminEditPanel: React.FC = () => {
       cloned.profile = {
         ...cloned.profile,
         heroLeftPhoto: cloned.profile?.heroLeftPhoto || '',
+        heroRightPhoto: cloned.profile?.heroRightPhoto || rawHeroGrid[0] || '',
         heroCollagePhotos: Array.from({ length: 11 }, (_, idx) =>
           typeof rawHeroGrid[idx] === 'string' ? rawHeroGrid[idx] : ''
         ),
@@ -695,15 +696,15 @@ export const AdminEditPanel: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Hero Flanking Photo Boxes (Left Frame + 11-Tile Brick Collage) */}
+                {/* Hero Flanking Photo Boxes (Left & Right Frames) */}
                 <div className="p-4 border border-zinc-800 bg-zinc-900 space-y-4">
                   <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
                     <div>
                       <h4 className="text-xs font-mono font-semibold uppercase tracking-wider text-white">
-                        Hero Photo Boxes (Left Frame &amp; Right Brick Grid)
+                        Hero Photo Frames (Left &amp; Right)
                       </h4>
                       <p className="text-[11px] text-zinc-400">
-                        Upload photos for the left hero frame and all 11 staggered right grid boxes (also editable directly on the Hero).
+                        Upload photos for the left and right hero frames flanking your headline (also editable directly on the Hero).
                       </p>
                     </div>
                   </div>
@@ -777,84 +778,72 @@ export const AdminEditPanel: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Right 11-Tile Brick Collage Boxes */}
-                  <div className="space-y-2">
-                    <span className="block text-[11px] font-mono text-zinc-300">
-                      Right Brick Grid Boxes (11 Slots)
-                    </span>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                      {Array.from({ length: 11 }, (_, idx) => {
-                        const tileUrl = draft.profile.heroCollagePhotos?.[idx] || '';
-                        return (
-                          <div
-                            key={idx}
-                            className="p-2 border border-zinc-800 bg-zinc-950 space-y-2"
-                          >
-                            <div className="flex items-center justify-between text-[10px] font-mono text-zinc-400">
-                              <span>Box #{idx + 1}</span>
-                              {tileUrl && (
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    setDraft((prev) => {
-                                      const next = Array.from({ length: 11 }, (_, i) =>
-                                        prev.profile.heroCollagePhotos?.[i] || ''
-                                      );
-                                      next[idx] = '';
-                                      return {
-                                        ...prev,
-                                        profile: { ...prev.profile, heroCollagePhotos: next },
-                                      };
-                                    })
-                                  }
-                                  className="text-zinc-400 hover:text-rose-400"
-                                >
-                                  Clear
-                                </button>
-                              )}
-                            </div>
-                            <div className="w-full h-16 border border-zinc-800 bg-zinc-900 overflow-hidden flex items-center justify-center">
-                              {tileUrl ? (
-                                <img
-                                  src={tileUrl}
-                                  alt={`Hero box ${idx + 1}`}
-                                  className="w-full h-full object-cover"
-                                  referrerPolicy="no-referrer"
-                                />
-                              ) : (
-                                <ImageIcon className="w-4 h-4 text-zinc-600" />
-                              )}
-                            </div>
-                            <label className="w-full cursor-pointer inline-flex items-center justify-center gap-1 px-2 py-1.5 border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-[10px] font-mono text-white">
-                              <Upload className="w-3 h-3" />
-                              <span>{tileUrl ? 'Replace' : 'Upload'}</span>
-                              <input
-                                type="file"
-                                accept=".png,.jpg,.jpeg,.webp,.gif,image/*"
-                                className="hidden"
-                                onChange={async (e) => {
-                                  const file = e.target.files?.[0];
-                                  e.target.value = '';
-                                  if (!file) return;
-                                  const url = await uploadFilePersistently(file);
-                                  if (url) {
-                                    setDraft((prev) => {
-                                      const next = Array.from({ length: 11 }, (_, i) =>
-                                        prev.profile.heroCollagePhotos?.[i] || ''
-                                      );
-                                      next[idx] = url;
-                                      return {
-                                        ...prev,
-                                        profile: { ...prev.profile, heroCollagePhotos: next },
-                                      };
-                                    });
-                                  }
-                                }}
-                              />
-                            </label>
-                          </div>
-                        );
-                      })}
+                  {/* Right Hero Box */}
+                  <div className="space-y-1.5">
+                    <label className="block text-[11px] font-mono text-zinc-300">
+                      Right Hero Frame Photo
+                    </label>
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-11 h-11 border border-zinc-700 bg-zinc-950 overflow-hidden shrink-0 flex items-center justify-center">
+                        {draft.profile.heroRightPhoto ? (
+                          <img
+                            src={draft.profile.heroRightPhoto}
+                            alt="Right hero frame"
+                            className="w-full h-full object-cover"
+                            referrerPolicy="no-referrer"
+                          />
+                        ) : (
+                          <ImageIcon className="w-4 h-4 text-zinc-600" />
+                        )}
+                      </div>
+                      <input
+                        type="text"
+                        value={draft.profile.heroRightPhoto || ''}
+                        onChange={(e) =>
+                          setDraft((prev) => ({
+                            ...prev,
+                            profile: { ...prev.profile, heroRightPhoto: e.target.value },
+                          }))
+                        }
+                        placeholder="Image URL or /uploads/..."
+                        className="flex-1 min-w-0 px-3 py-2 bg-zinc-950 border border-zinc-700 text-xs text-white"
+                      />
+                      <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-2 border border-zinc-700 bg-zinc-950 hover:bg-zinc-800 text-xs font-mono text-white shrink-0">
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>{isUploading ? '...' : 'Upload'}</span>
+                        <input
+                          type="file"
+                          accept=".png,.jpg,.jpeg,.webp,.gif,image/*"
+                          className="hidden"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            e.target.value = '';
+                            if (!file) return;
+                            const url = await uploadFilePersistently(file);
+                            if (url) {
+                              setDraft((prev) => ({
+                                ...prev,
+                                profile: { ...prev.profile, heroRightPhoto: url },
+                              }));
+                            }
+                          }}
+                        />
+                      </label>
+                      {draft.profile.heroRightPhoto && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setDraft((prev) => ({
+                              ...prev,
+                              profile: { ...prev.profile, heroRightPhoto: '' },
+                            }))
+                          }
+                          title="Clear right hero frame"
+                          className="p-2 border border-zinc-700 text-zinc-400 hover:text-rose-400"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>

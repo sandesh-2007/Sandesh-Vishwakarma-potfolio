@@ -58,8 +58,8 @@ interface PortfolioContextType {
   resetPortfolio: () => Promise<{ success: boolean; error?: string }>;
   uploadFile: (file: File) => Promise<{ success: boolean; url: string; fileName: string; error?: string }>;
   uploadProfilePhoto: (file: File) => Promise<boolean>;
-  uploadHeroBoxPhoto: (target: 'left' | number, file: File) => Promise<boolean>;
-  removeHeroBoxPhoto: (target: 'left' | number) => Promise<boolean>;
+  uploadHeroBoxPhoto: (target: 'left' | 'right' | number, file: File) => Promise<boolean>;
+  removeHeroBoxPhoto: (target: 'left' | 'right' | number) => Promise<boolean>;
   uploadCertificateDocument: (certId: string, file: File) => Promise<boolean>;
   addNewCertificateWithFile: (newCert: Omit<CertificationItem, 'id'>, file?: File) => Promise<boolean>;
   addOtherSkill: (item: Omit<OtherSkillItem, 'id'>, previewFile?: File, documentFile?: File) => Promise<boolean>;
@@ -154,6 +154,7 @@ function normalizeSkillsPortfolioData(raw: PortfolioData): PortfolioData {
     profile: {
       ...raw.profile,
       heroLeftPhoto: raw.profile?.heroLeftPhoto || '',
+      heroRightPhoto: raw.profile?.heroRightPhoto || normalizedCollage[0] || '',
       heroCollagePhotos: normalizedCollage,
     },
     skillsOrbitV2: true,
@@ -745,7 +746,7 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({ children 
     return false;
   };
 
-  const uploadHeroBoxPhoto = async (target: 'left' | number, file: File): Promise<boolean> => {
+  const uploadHeroBoxPhoto = async (target: 'left' | 'right' | number, file: File): Promise<boolean> => {
     const isImage =
       file.type.startsWith('image/') ||
       /\.(png|jpe?g|webp|gif)$/i.test(file.name);
@@ -755,8 +756,10 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({ children 
     }
     showToast(
       target === 'left'
-        ? 'Uploading photo to left hero box...'
-        : `Uploading photo to grid box #${target + 1}...`,
+        ? 'Uploading photo to left hero frame...'
+        : target === 'right'
+          ? 'Uploading photo to right hero frame...'
+          : `Uploading photo to grid box #${target + 1}...`,
       'info'
     );
     const res = await uploadFile(file);
@@ -768,10 +771,12 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({ children 
       const nextProfile =
         target === 'left'
           ? { ...latest.profile, heroLeftPhoto: res.url, heroCollagePhotos: existingGrid }
-          : {
-              ...latest.profile,
-              heroCollagePhotos: existingGrid.map((val, i) => (i === target ? res.url : val)),
-            };
+          : target === 'right'
+            ? { ...latest.profile, heroRightPhoto: res.url, heroCollagePhotos: existingGrid }
+            : {
+                ...latest.profile,
+                heroCollagePhotos: existingGrid.map((val, i) => (i === target ? res.url : val)),
+              };
       const updated: PortfolioData = {
         ...latest,
         profile: nextProfile,
@@ -781,7 +786,9 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({ children 
         showToast(
           target === 'left'
             ? 'Left frame photo uploaded and saved!'
-            : `Box #${target + 1} photo uploaded and saved!`,
+            : target === 'right'
+              ? 'Right frame photo uploaded and saved!'
+              : `Box #${target + 1} photo uploaded and saved!`,
           'success'
         );
         return true;
@@ -792,7 +799,7 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({ children 
     return false;
   };
 
-  const removeHeroBoxPhoto = async (target: 'left' | number): Promise<boolean> => {
+  const removeHeroBoxPhoto = async (target: 'left' | 'right' | number): Promise<boolean> => {
     const latest = dataRef.current;
     const existingGrid = Array.from({ length: 11 }, (_, idx) =>
       latest.profile?.heroCollagePhotos?.[idx] || ''
@@ -800,14 +807,24 @@ export const PortfolioProvider: React.FC<{ children: ReactNode }> = ({ children 
     const nextProfile =
       target === 'left'
         ? { ...latest.profile, heroLeftPhoto: '', heroCollagePhotos: existingGrid }
-        : {
-            ...latest.profile,
-            heroCollagePhotos: existingGrid.map((val, i) => (i === target ? '' : val)),
-          };
+        : target === 'right'
+          ? {
+              ...latest.profile,
+              heroRightPhoto: '',
+              heroCollagePhotos: existingGrid.map((val, i) => (i === 0 ? '' : val)),
+            }
+          : {
+              ...latest.profile,
+              heroCollagePhotos: existingGrid.map((val, i) => (i === target ? '' : val)),
+            };
     const saveRes = await updatePortfolio({ ...latest, profile: nextProfile });
     if (saveRes.success) {
       showToast(
-        target === 'left' ? 'Left frame photo removed.' : `Box #${target + 1} photo removed.`,
+        target === 'left'
+          ? 'Left frame photo removed.'
+          : target === 'right'
+            ? 'Right frame photo removed.'
+            : `Box #${target + 1} photo removed.`,
         'info'
       );
       return true;

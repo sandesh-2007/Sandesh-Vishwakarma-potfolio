@@ -45,6 +45,7 @@ export const initialPortfolioData: PortfolioData = {
     ],
     avatarUrl: '/sandesh_profile.jpg',
     heroLeftPhoto: '',
+    heroRightPhoto: '',
     heroCollagePhotos: Array(11).fill(''),
     location: 'Mumbai, Maharashtra, India',
     email: 'sandesh.vishwakarma2007@gmail.com',

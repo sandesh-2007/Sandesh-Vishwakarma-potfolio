@@ -14,7 +14,6 @@ import {
   Github,
   Terminal,
   FolderGit2,
-  Plus,
   X,
   Image as ImageIcon
 } from 'lucide-react';
@@ -24,30 +23,6 @@ interface HeroProps {
   onOpenSurpriseModal?: () => void;
   isGiftVisible?: boolean;
 }
-
-const BRICK_ROWS: Array<Array<{ slot: number; span: string }>> = [
-  [
-    { slot: 0, span: 'col-span-5' },
-    { slot: 1, span: 'col-span-7' },
-  ],
-  [
-    { slot: 2, span: 'col-span-4' },
-    { slot: 3, span: 'col-span-8' },
-  ],
-  [
-    { slot: 4, span: 'col-span-8' },
-    { slot: 5, span: 'col-span-4' },
-  ],
-  [
-    { slot: 6, span: 'col-span-3' },
-    { slot: 7, span: 'col-span-5' },
-    { slot: 8, span: 'col-span-4' },
-  ],
-  [
-    { slot: 9, span: 'col-span-7' },
-    { slot: 10, span: 'col-span-5' },
-  ],
-];
 
 export const Hero: React.FC<HeroProps> = ({
   onOpenResumeModal,
@@ -67,17 +42,14 @@ export const Hero: React.FC<HeroProps> = ({
   const { profile, projects } = data;
   const [profileUploadOpen, setProfileUploadOpen] = useState(false);
   const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
-  const [uploadingSlot, setUploadingSlot] = useState<'left' | number | null>(null);
+  const [uploadingSlot, setUploadingSlot] = useState<'left' | null>(null);
   const [lightboxPhoto, setLightboxPhoto] = useState<{ url: string; label: string } | null>(null);
 
   const featuredShowcase = (projects || []).slice(0, 4);
   const leftHeroPhoto = profile.heroLeftPhoto || '';
-  const collagePhotos = Array.from({ length: 11 }, (_, idx) =>
-    profile.heroCollagePhotos?.[idx] || ''
-  );
 
   const handleBoxFileChange = async (
-    target: 'left' | number,
+    target: 'left',
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const file = e.target.files?.[0];
@@ -104,7 +76,7 @@ export const Hero: React.FC<HeroProps> = ({
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Top Display Block: Left Photo Frame + Center Headline + Right Brick Photo Grid */}
+        {/* Top Display Block: Left Photo Frame + Center Headline */}
         <div className="py-6 sm:py-8 lg:py-10 grid grid-cols-1 lg:grid-cols-12 items-stretch gap-5 lg:gap-6">
           {/* Left Hero Photo Box */}
           <div
@@ -251,122 +223,6 @@ export const Hero: React.FC<HeroProps> = ({
                 {profile.tagline}
               </span>
             </div>
-          </div>
-
-          {/* Right Staggered 5-Row Brick Photo Collage (11 Clickable Upload Boxes) */}
-          <div
-            className={`order-3 lg:col-span-3 h-[250px] sm:h-[260px] lg:h-[280px] border grid grid-rows-5 gap-px overflow-hidden ${
-              isLight ? 'border-zinc-300 bg-zinc-300' : 'border-zinc-800 bg-zinc-800'
-            }`}
-            aria-label="Hero brick photo grid"
-          >
-            {BRICK_ROWS.map((row, rowIdx) => (
-              <div key={rowIdx} className="grid grid-cols-12 gap-px h-full min-h-0">
-                {row.map(({ slot, span }) => {
-                  const photoUrl = collagePhotos[slot];
-                  const hasPhoto = Boolean(photoUrl) && !failedImages[`${slot}:${photoUrl}`];
-                  const isBusy = uploadingSlot === slot;
-
-                  return (
-                    <div
-                      key={slot}
-                      className={`${span} relative h-full min-h-0 overflow-hidden group/tile transition-colors ${
-                        isLight ? 'bg-white' : 'bg-zinc-950'
-                      }`}
-                    >
-                      {hasPhoto ? (
-                        <>
-                          <img
-                            key={photoUrl}
-                            src={photoUrl}
-                            alt={`Portfolio grid box ${slot + 1}`}
-                            referrerPolicy="no-referrer"
-                            onClick={() =>
-                              setLightboxPhoto({
-                                url: photoUrl,
-                                label: `Gallery Tile #${slot + 1}`,
-                              })
-                            }
-                            onError={() =>
-                              setFailedImages((prev) => ({
-                                ...prev,
-                                [`${slot}:${photoUrl}`]: true,
-                              }))
-                            }
-                            className="absolute inset-0 w-full h-full object-cover cursor-pointer grayscale-[15%] group-hover/tile:grayscale-0 group-hover/tile:scale-[1.03] transition-all duration-300"
-                          />
-                          {isAdmin && (
-                            <div className="absolute inset-0 bg-black/45 opacity-0 group-hover/tile:opacity-100 focus-within:opacity-100 transition-opacity flex items-center justify-center gap-1">
-                              <label
-                                className="cursor-pointer p-1 bg-white text-zinc-950 hover:bg-zinc-200 transition-colors"
-                                title={`Replace photo in box ${slot + 1}`}
-                                aria-label={`Replace photo in box ${slot + 1}`}
-                              >
-                                <Upload className="w-3 h-3" />
-                                <input
-                                  type="file"
-                                  accept=".png,.jpg,.jpeg,.webp,.gif,image/*"
-                                  className="hidden"
-                                  onChange={(e) => handleBoxFileChange(slot, e)}
-                                />
-                              </label>
-                              <button
-                                type="button"
-                                onClick={() => removeHeroBoxPhoto(slot)}
-                                title={`Remove photo from box ${slot + 1}`}
-                                aria-label={`Remove photo from box ${slot + 1}`}
-                                className="p-1 bg-zinc-950 text-white hover:bg-rose-600 transition-colors"
-                              >
-                                <X className="w-3 h-3" />
-                              </button>
-                            </div>
-                          )}
-                        </>
-                      ) : isAdmin ? (
-                        <label
-                          className={`w-full h-full flex items-center justify-center cursor-pointer transition-colors ${
-                            slot === 1 ? 'pr-8 lg:pr-10' : ''
-                          } ${
-                            isLight
-                              ? 'bg-white hover:bg-zinc-100 text-zinc-500 hover:text-zinc-950'
-                              : 'bg-zinc-950 hover:bg-zinc-900 text-zinc-500 hover:text-white'
-                          }`}
-                          title={`Upload photo to box ${slot + 1}`}
-                          aria-label={`Upload photo to box ${slot + 1}`}
-                        >
-                          {isBusy ? (
-                            <span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                          ) : (
-                            <Plus className="w-3.5 h-3.5" />
-                          )}
-                          <input
-                            type="file"
-                            accept=".png,.jpg,.jpeg,.webp,.gif,image/*"
-                            className="hidden"
-                            onChange={(e) => handleBoxFileChange(slot, e)}
-                          />
-                        </label>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={handleGuestEmptyClick}
-                          aria-label={`Upload photo to box ${slot + 1} (Admin login)`}
-                          className={`w-full h-full flex items-center justify-center cursor-pointer transition-colors ${
-                            slot === 1 ? 'pr-8 lg:pr-10' : ''
-                          } ${
-                            isLight
-                              ? 'bg-white hover:bg-zinc-50 text-zinc-300 hover:text-zinc-700'
-                              : 'bg-zinc-950 hover:bg-zinc-900/70 text-zinc-700 hover:text-zinc-300'
-                          }`}
-                        >
-                          <Plus className="w-3 h-3 opacity-0 group-hover/tile:opacity-100 transition-opacity" />
-                        </button>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
           </div>
         </div>
 

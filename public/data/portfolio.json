@@ -9,7 +9,7 @@
       "My passion lies in solving real-world challenges through technology. Whether designing responsive client-facing interfaces, optimizing relational database schemas, or automating financial reporting workflows, I focus on delivering clean, maintainable, and high-impact digital solutions.",
       "Always proactive in upskilling, I constantly explore emerging frameworks, modern UI/UX principles, and AI-driven developer productivity tools. I am actively seeking freelance opportunities and future industry roles where I can contribute meaningful value and collaborate with visionary teams."
     ],
-    "avatarUrl": "/uploads/1795042981277_sandesh_image.jpg",
+    "avatarUrl": "/uploads/1795205398372_tsdc_logo_new.webp",
     "location": "Mumbai, Maharashtra, India",
     "email": "sandesh.vishwakarma2007@gmail.com",
     "phone": "+91 91370 00000",
@@ -27,7 +27,21 @@
       "technologiesCount": "13+",
       "certificationsCount": "4+",
       "currentSemester": "2nd / 3rd Sem"
-    }
+    },
+    "heroLeftPhoto": "/uploads/1795205028643_sandesh_image.jpg",
+    "heroCollagePhotos": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ]
   },
   "education": [
     {
@@ -634,7 +648,7 @@
     "lastSyncedAt": "2026-09-13T03:59:03.460Z",
     "autoSync": true
   },
-  "updatedAt": 1795043496192,
+  "updatedAt": 1795205397028,
   "certificationsSettings": {
     "heading": "Licenses & Certifications",
     "description": "Verified qualifications and certificate documents validating skills in IT, computer systems, and development.",

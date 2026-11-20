@@ -13,6 +13,7 @@ export interface PersonalProfile {
   aboutLong: string[];
   avatarUrl: string;
   heroLeftPhoto?: string;
+  heroRightPhoto?: string;
   heroCollagePhotos?: string[];
   location: string;
   email: string;
