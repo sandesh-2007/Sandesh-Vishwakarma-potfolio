@@ -9,11 +9,21 @@ import { createServer as createViteServer } from 'vite';
 dotenv.config();
 
 const app = express();
-const PORT = 3000;
+const PORT = Number(process.env.PORT) || 3000;
 
 // Increase limit for image/PDF uploads and portfolio JSON payloads
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+// Ensure all /api/* routes handle OPTIONS preflight and advertise supported HTTP methods
+app.use('/api', (req, res, next) => {
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+  next();
+});
 
 // Ensure persistent data directory exists
 const DATA_DIR = path.join(process.cwd(), 'data');
@@ -653,6 +663,29 @@ const handleFileUploadRoute = (req: express.Request, res: express.Response) => {
 
 app.post('/api/upload', requireAuth, handleFileUploadRoute);
 app.put('/api/upload', requireAuth, handleFileUploadRoute);
+app.post('/api/uploads', requireAuth, handleFileUploadRoute);
+app.all('/api/upload', (_req, res) => {
+  res.setHeader('Allow', 'POST, PUT, OPTIONS');
+  return res.status(405).json({ error: 'Method Not Allowed. Use POST /api/upload.' });
+});
+
+// Return clean JSON errors for body-parser failures (e.g. payload too large or invalid JSON)
+app.use('/api', (err: any, _req: express.Request, res: express.Response, next: express.NextFunction) => {
+  if (!err) return next();
+  if (err.type === 'entity.too.large' || err.status === 413) {
+    return res.status(413).json({ error: 'Uploaded file is too large (max 50MB).' });
+  }
+  if (err instanceof SyntaxError && 'body' in err) {
+    return res.status(400).json({ error: 'Invalid JSON payload.' });
+  }
+  console.error('API error:', err);
+  return res.status(err.status || 500).json({ error: err.message || 'Internal server error' });
+});
+
+// Prevent unmatched /api/* requests from falling through to Vite or static SPA middleware
+app.all('/api/*', (req, res) => {
+  return res.status(404).json({ error: `API route not found: ${req.method} ${req.originalUrl}` });
+});
 
 // Vite Middleware & SPA serving
 async function startServer() {
